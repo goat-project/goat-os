@@ -15,7 +15,7 @@ earlier than time to.
 See [goat wiki](https://github.com/goat-project/goat/wiki) for more info.
 
 ## Requirements
-* Go 1.11 or newer
+* Go 1.12 or newer
 * Openstack instance
 * [Goat server](https://github.com/goat-project/goat)
 
