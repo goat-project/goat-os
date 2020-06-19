@@ -4,6 +4,7 @@ import (
 	"github.com/goat-project/goat-os/constants"
 	"github.com/goat-project/goat-os/logger"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var networkFlags = []string{constants.CfgNetworkSiteName, constants.CfgNetworkCloudType,
@@ -22,4 +23,18 @@ var networkCmd = &cobra.Command{
 		// TODO set rate limiters
 		// TODO account network
 	},
+}
+
+func initNetwork() {
+	goatOsCmd.AddCommand(networkCmd)
+
+	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkSiteName),
+		viper.GetString(constants.CfgNetworkSiteName), "site name [NETWORK_SITE_NAME] (required)")
+	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkCloudType),
+		viper.GetString(constants.CfgNetworkCloudType), "cloud type [NETWORK_CLOUD_TYPE] (required)")
+	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkCloudComputeService),
+		viper.GetString(constants.CfgNetworkCloudComputeService),
+		"cloud compute service [NETWORK_CLOUD_COMPUTE_SERVICE]")
+
+	bindFlags(*networkCmd, networkFlags)
 }

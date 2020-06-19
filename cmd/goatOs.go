@@ -50,7 +50,9 @@ func Execute() {
 func Initialize() {
 	initGoatOs()
 
-	// TODO initialize vm, network, storage
+	initVM()
+	initNetwork()
+	initStorage()
 }
 
 func initGoatOs() {
