@@ -10,6 +10,8 @@ import (
 
 var vmFlags = []string{constants.CfgSiteName, constants.CfgCloudType, constants.CfgCloudComputeService}
 
+var vmRequired = []string{constants.CfgSiteName, constants.CfgCloudType}
+
 var vmCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Extract virtual machine data",
@@ -24,7 +26,11 @@ var vmCmd = &cobra.Command{
 			logFlags(vmFlags)
 		}
 
-		// TODO check if required constants exists
+		err := checkRequired(vmRequired)
+		if err != nil {
+			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
+		}
+
 		// TODO set rate limiters
 		// TODO account virtual machine
 	},

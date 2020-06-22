@@ -11,6 +11,8 @@ import (
 var networkFlags = []string{constants.CfgNetworkSiteName, constants.CfgNetworkCloudType,
 	constants.CfgNetworkCloudComputeService}
 
+var networkRequired = []string{constants.CfgNetworkSiteName, constants.CfgNetworkCloudType}
+
 var networkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Extract network data",
@@ -25,7 +27,11 @@ var networkCmd = &cobra.Command{
 			logFlags(networkFlags)
 		}
 
-		// TODO check if required constants exists
+		err := checkRequired(networkRequired)
+		if err != nil {
+			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
+		}
+
 		// TODO set rate limiters
 		// TODO account network
 	},

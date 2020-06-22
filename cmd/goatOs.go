@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/goat-project/goat-os/constants"
@@ -21,6 +22,9 @@ var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, co
 	constants.CfgScopeDomainName, constants.CfgScopeSystem, constants.CfgAppCredentialID, constants.CfgAppCredentialName,
 	constants.CfgAppCredentialSecret, constants.CfgOpenstackTimeout, constants.CfgDebug, constants.CfgLogPath}
 
+var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
+	constants.CfgOpenstackIdentityEndpoint, constants.CfgOpenstackTimeout}
+
 var goatOsCmd = &cobra.Command{
 	Use:   "goat-os",
 	Short: "extracts data about virtual machines, networks and storages",
@@ -36,7 +40,11 @@ var goatOsCmd = &cobra.Command{
 			logFlags(append(vmFlags, append(networkFlags, storageFlags...)...))
 		}
 
-		// TODO check if required constants from config exists
+		err := checkRequired(append(goatOsRequired, append(vmRequired, append(networkRequired, storageRequired...)...)...))
+		if err != nil {
+			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
+		}
+
 		// TODO set rate limiters
 		// TODO account vm, network, storage
 	},
@@ -172,4 +180,14 @@ func logFlags(flags []string) {
 	for _, flag := range append(goatOsFlags, flags...) {
 		log.WithFields(log.Fields{"flag": flag, "value": viper.Get(flag)}).Debug("flag initialized")
 	}
+}
+
+func checkRequired(required []string) error {
+	for _, req := range required {
+		if viper.GetString(req) == "" {
+			return fmt.Errorf(req)
+		}
+	}
+
+	return nil
 }

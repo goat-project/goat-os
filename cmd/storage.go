@@ -10,6 +10,8 @@ import (
 
 var storageFlags = []string{constants.CfgSite}
 
+var storageRequired []string
+
 var storageCmd = &cobra.Command{
 	Use:   "storage",
 	Short: "Extract storage data",
@@ -24,7 +26,11 @@ var storageCmd = &cobra.Command{
 			logFlags(storageFlags)
 		}
 
-		// TODO check if required constants exists
+		err := checkRequired(storageRequired)
+		if err != nil {
+			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
+		}
+
 		// TODO set rate limiters
 		// TODO account storage
 	},
