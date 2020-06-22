@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/goat-project/goat-os/constants"
 	"github.com/goat-project/goat-os/logger"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,6 +19,11 @@ var networkCmd = &cobra.Command{
 		"then sends them to a server for further processing.",
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Init()
+
+		if viper.GetBool("debug") {
+			log.WithFields(log.Fields{"version": version}).Debug("goat-os version")
+			logFlags(networkFlags)
+		}
 
 		// TODO check if required constants exists
 		// TODO set rate limiters

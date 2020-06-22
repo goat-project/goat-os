@@ -31,6 +31,11 @@ var goatOsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		logger.Init()
 
+		if viper.GetBool("debug") {
+			log.WithFields(log.Fields{"version": version}).Debug("goat-os version")
+			logFlags(append(vmFlags, append(networkFlags, storageFlags...)...))
+		}
+
 		// TODO check if required constants from config exists
 		// TODO set rate limiters
 		// TODO account vm, network, storage
@@ -161,4 +166,10 @@ func lastString(ss []string) string {
 	}
 
 	return ss[len(ss)-1]
+}
+
+func logFlags(flags []string) {
+	for _, flag := range append(goatOsFlags, flags...) {
+		log.WithFields(log.Fields{"flag": flag, "value": viper.Get(flag)}).Debug("flag initialized")
+	}
 }
