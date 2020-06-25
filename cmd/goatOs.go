@@ -16,11 +16,13 @@ const version = "1.0.0"
 
 var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, constants.CfgRecordsTo,
 	constants.CfgRecordsForPeriod, constants.CfgGoatEndpoint, constants.CfgOpenstackIdentityEndpoint,
-	constants.CfgUsername, constants.CfgUserID, constants.CfgPassword, constants.CfgPasscode, constants.CfgDomainID,
-	constants.CfgDomainName, constants.CfgTenantID, constants.CfgTenantName, constants.CfgAllowReauth,
-	constants.CfgTokenID, constants.CfgScopeProjectID, constants.CfgScopeProjectID, constants.CfgScopeDomainID,
-	constants.CfgScopeDomainName, constants.CfgScopeSystem, constants.CfgAppCredentialID, constants.CfgAppCredentialName,
-	constants.CfgAppCredentialSecret, constants.CfgOpenstackTimeout, constants.CfgDebug, constants.CfgLogPath}
+	constants.CfgOpenstackTimeout, constants.CfgUsername, constants.CfgUserID, constants.CfgPassword,
+	constants.CfgPasscode, constants.CfgDomainID, constants.CfgDomainName, constants.CfgTenantID,
+	constants.CfgTenantName, constants.CfgAllowReauth, constants.CfgTokenID, constants.CfgScopeProjectID,
+	constants.CfgScopeProjectID, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
+	constants.CfgAppCredentialID, constants.CfgAppCredentialName, constants.CfgAppCredentialSecret,
+	constants.CfgEndpointType, constants.CfgAppCredentialName, constants.CfgEndpointRegion,
+	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath}
 
 var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
 	constants.CfgOpenstackIdentityEndpoint, constants.CfgOpenstackTimeout}
@@ -86,6 +88,8 @@ func initGoatOs() {
 	goatOsCmd.PersistentFlags().StringP(constants.CfgOpenstackIdentityEndpoint, "o",
 		viper.GetString(constants.CfgOpenstackIdentityEndpoint),
 		"Openstack identity endpoint [OS_IDENTITY_ENDPOINT] (required)")
+	goatOsCmd.PersistentFlags().String(constants.CfgOpenstackTimeout, viper.GetString(constants.CfgOpenstackTimeout),
+		"timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)")
 
 	goatOsCmd.PersistentFlags().String(constants.CfgUsername, viper.GetString(constants.CfgUsername),
 		"Openstack authentication username [OS_USERNAME]")
@@ -124,8 +128,15 @@ func initGoatOs() {
 	goatOsCmd.PersistentFlags().String(constants.CfgAppCredentialSecret, viper.GetString(constants.CfgAppCredentialSecret),
 		"Openstack application credential secret [OS_APPCREDENTIAL_SECRET]")
 
-	goatOsCmd.PersistentFlags().String(constants.CfgOpenstackTimeout, viper.GetString(constants.CfgOpenstackTimeout),
-		"timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)")
+	goatOsCmd.PersistentFlags().String(constants.CfgEndpointType, viper.GetString(constants.CfgEndpointType),
+		"Openstack endpoint type [OS_ENDPOINT_TYPE]")
+	goatOsCmd.PersistentFlags().String(constants.CfgEndpointName, viper.GetString(constants.CfgEndpointName),
+		"Openstack endpoint name [OS_ENDPOINT_NAME]")
+	goatOsCmd.PersistentFlags().String(constants.CfgEndpointRegion, viper.GetString(constants.CfgEndpointRegion),
+		"Openstack endpoint region [OS_ENDPOINT_REGION]")
+	goatOsCmd.PersistentFlags().String(constants.CfgEndpointAvailability,
+		viper.GetString(constants.CfgEndpointAvailability),
+		"Openstack endpoint availability (AvailabilityPublic, AvailabilityInternal, AvailabilityAdmin)")
 
 	goatOsCmd.PersistentFlags().StringP(constants.CfgDebug, "d", viper.GetString(constants.CfgDebug),
 		"debug")
