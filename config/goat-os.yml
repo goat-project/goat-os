@@ -129,10 +129,10 @@ endpoint-options:
   # "internalURL", and "publicURL"), while v3 lists them as "Interfaces" in an
   # endpoint's response.
   #
-  #	[AvailabilityPublic, AvailabilityInternal, AvailabilityAdmin]
+  #	[public, internal, admin]
   #
-  #	Availability is not required, and defaults to AvailabilityPublic. Not all
-  #	providers or services offer all Availability options.
+  #	Availability is not required, and defaults to public. Not all providers or
+  # services offer all Availability options.
   availability:
 
 # Debug mode (true/false)

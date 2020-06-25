@@ -136,7 +136,7 @@ func initGoatOs() {
 		"Openstack endpoint region [OS_ENDPOINT_REGION]")
 	goatOsCmd.PersistentFlags().String(constants.CfgEndpointAvailability,
 		viper.GetString(constants.CfgEndpointAvailability),
-		"Openstack endpoint availability (AvailabilityPublic, AvailabilityInternal, AvailabilityAdmin)")
+		"Openstack endpoint availability (public, internal, admin)")
 
 	goatOsCmd.PersistentFlags().StringP(constants.CfgDebug, "d", viper.GetString(constants.CfgDebug),
 		"debug")
