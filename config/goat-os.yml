@@ -42,6 +42,9 @@ endpoint: 127.0.0.1:9623
 # Openstack identity endpoint (required)
 openstack-identity-endpoint: https://openstack.example.com:5000/v3
 
+# Timeout for Openstack calls (required)
+openstack-timeout: 5m
+
 # Auth-options stores information needed to authenticate to
 # an OpenStack Cloud. (required)
 auth-options:
@@ -78,7 +81,7 @@ auth-options:
   # cache your credentials in memory, and to allow developers to attempt to
   # re-authenticate automatically if/when your token expires.  If you set it to
   # false, it will not cache these settings, but re-authentication will not be
-  # possible.  This setting defaults to false.
+  # possible. This setting defaults to false.
   allow-reauth:
 
   # Token-id allows users to authenticate (possibly as another user) with an
@@ -95,13 +98,10 @@ auth-options:
     system:
 
   # Authentication through Application Credentials requires supplying name,
-  # project and secret.	For project we can use tenant-id.
+  # project and secret. For project we can use tenant-id.
   application-credential-id:
   application-credential-name:
   application-credential-secret:
-
-# Timeout for Openstack calls (required)
-openstack-timeout: 5m
 
 # Debug mode (true/false)
 debug: false
