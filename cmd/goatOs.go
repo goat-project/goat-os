@@ -19,13 +19,61 @@ var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, co
 	constants.CfgOpenstackTimeout, constants.CfgUsername, constants.CfgUserID, constants.CfgPassword,
 	constants.CfgPasscode, constants.CfgDomainID, constants.CfgDomainName, constants.CfgTenantID,
 	constants.CfgTenantName, constants.CfgAllowReauth, constants.CfgTokenID, constants.CfgScopeProjectID,
-	constants.CfgScopeProjectID, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
+	constants.CfgScopeProjectName, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
 	constants.CfgAppCredentialID, constants.CfgAppCredentialName, constants.CfgAppCredentialSecret,
-	constants.CfgEndpointType, constants.CfgAppCredentialName, constants.CfgEndpointRegion,
+	constants.CfgEndpointType, constants.CfgEndpointName, constants.CfgEndpointRegion,
 	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath}
 
 var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
 	constants.CfgOpenstackIdentityEndpoint, constants.CfgOpenstackTimeout}
+
+var goatOsDescription = map[string]string{
+	constants.CfgIdentifier:       "goat identifier [IDENTIFIER] (required)",
+	constants.CfgRecordsFrom:      "records from [TIME]",
+	constants.CfgRecordsTo:        "records to [TIME]",
+	constants.CfgRecordsForPeriod: "records for period [TIME PERIOD]",
+
+	constants.CfgGoatEndpoint:              "goat server [GOAT_SERVER_ENDPOINT] (required)",
+	constants.CfgOpenstackIdentityEndpoint: "Openstack identity endpoint [OS_IDENTITY_ENDPOINT] (required)",
+	constants.CfgOpenstackTimeout:          "timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)",
+
+	constants.CfgUsername:            "Openstack authentication username [OS_USERNAME]",
+	constants.CfgUserID:              "Openstack authentication user TenantID [OS_USER_ID]",
+	constants.CfgPassword:            "Openstack authentication password [OS_PASSWORD]",
+	constants.CfgPasscode:            "Openstack authentication passcode [OS_PASSCODE]",
+	constants.CfgDomainID:            "Openstack authentication domain TenantID [OS_DOMAIN_ID]",
+	constants.CfgDomainName:          "Openstack authentication domain name [OS_DOMAIN_NAME]",
+	constants.CfgTenantID:            "Openstack authentication tenant TenantID [OS_TENANT_ID]",
+	constants.CfgTenantName:          "Openstack authentication tenant name [OS_TENANT_NAME]",
+	constants.CfgAllowReauth:         "Openstack authentication allow reauth. [OS_ALLOW_REAUTH]",
+	constants.CfgTokenID:             "Openstack authentication token TenantID [OS_TOKEN_ID]",
+	constants.CfgScopeProjectID:      "Openstack scope project TenantID [OS_SCOPE_PROJECT_ID]",
+	constants.CfgScopeProjectName:    "Openstack scope project name [OS_SCOPE_PROJECT_NAME]",
+	constants.CfgScopeDomainID:       "Openstack scope domain TenantID [OS_SCOPE_DOMAIN_ID]",
+	constants.CfgScopeDomainName:     "Openstack scope domain name [OS_SCOPE_DOMAIN_NAME]",
+	constants.CfgScopeSystem:         "Openstack scope system [OS_SCOPE_SYSTEM]",
+	constants.CfgAppCredentialID:     "Openstack application credential TenantID [OS_APPCREDENTIAL_ID]",
+	constants.CfgAppCredentialName:   "Openstack application credential name [OS_APPCREDENTIAL_NAME]",
+	constants.CfgAppCredentialSecret: "Openstack application credential secret [OS_APPCREDENTIAL_SECRET]",
+
+	constants.CfgEndpointType:         "Openstack endpoint type [OS_ENDPOINT_TYPE]",
+	constants.CfgEndpointName:         "Openstack endpoint name [OS_ENDPOINT_NAME]",
+	constants.CfgEndpointRegion:       "Openstack endpoint region [OS_ENDPOINT_REGION]",
+	constants.CfgEndpointAvailability: "Openstack endpoint availability (public, internal, admin)",
+
+	constants.CfgDebug:   "debug",
+	constants.CfgLogPath: "path to log file",
+}
+
+var goatOsShorthand = map[string]string{
+	constants.CfgIdentifier:                "i",
+	constants.CfgRecordsFrom:               "f",
+	constants.CfgRecordsTo:                 "t",
+	constants.CfgRecordsForPeriod:          "p",
+	constants.CfgGoatEndpoint:              "e",
+	constants.CfgOpenstackIdentityEndpoint: "o",
+	constants.CfgDebug:                     "d",
+}
 
 var goatOsCmd = &cobra.Command{
 	Use:   "goat-os",
@@ -73,75 +121,7 @@ func Initialize() {
 func initGoatOs() {
 	cobra.OnInitialize(initConfig)
 
-	goatOsCmd.PersistentFlags().StringP(constants.CfgIdentifier, "i", viper.GetString(constants.CfgIdentifier),
-		"goat identifier [IDENTIFIER] (required)")
-
-	goatOsCmd.PersistentFlags().StringP(constants.CfgRecordsFrom, "f", viper.GetString(constants.CfgRecordsFrom),
-		"records from [TIME]")
-	goatOsCmd.PersistentFlags().StringP(constants.CfgRecordsTo, "t", viper.GetString(constants.CfgRecordsTo),
-		"records to [TIME]")
-	goatOsCmd.PersistentFlags().StringP(constants.CfgRecordsForPeriod, "p",
-		viper.GetString(constants.CfgRecordsForPeriod), "records for period [TIME PERIOD]")
-
-	goatOsCmd.PersistentFlags().StringP(constants.CfgGoatEndpoint, "e", viper.GetString(constants.CfgGoatEndpoint),
-		"goat server [GOAT_SERVER_ENDPOINT] (required)")
-	goatOsCmd.PersistentFlags().StringP(constants.CfgOpenstackIdentityEndpoint, "o",
-		viper.GetString(constants.CfgOpenstackIdentityEndpoint),
-		"Openstack identity endpoint [OS_IDENTITY_ENDPOINT] (required)")
-	goatOsCmd.PersistentFlags().String(constants.CfgOpenstackTimeout, viper.GetString(constants.CfgOpenstackTimeout),
-		"timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)")
-
-	goatOsCmd.PersistentFlags().String(constants.CfgUsername, viper.GetString(constants.CfgUsername),
-		"Openstack authentication username [OS_USERNAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgUserID, viper.GetString(constants.CfgUserID),
-		"Openstack authentication user ID [OS_USER_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgPassword, viper.GetString(constants.CfgPassword),
-		"Openstack authentication password [OS_PASSWORD]")
-	goatOsCmd.PersistentFlags().String(constants.CfgPasscode, viper.GetString(constants.CfgPasscode),
-		"Openstack authentication passcoe [OS_PASSCODE]")
-	goatOsCmd.PersistentFlags().String(constants.CfgDomainID, viper.GetString(constants.CfgDomainID),
-		"Openstack authentication domain ID [OS_DOMAIN_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgDomainName, viper.GetString(constants.CfgDomainName),
-		"Openstack authentication domain name [OS_DOMAIN_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgTenantID, viper.GetString(constants.CfgTenantID),
-		"Openstack authentication tenant ID [OS_TENANT_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgTenantName, viper.GetString(constants.CfgTenantName),
-		"Openstack authentication tenant name [OS_TENANT_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgAllowReauth, viper.GetString(constants.CfgAllowReauth),
-		"Openstack authentication allow reauth. [OS_ALLOW_REAUTH]")
-	goatOsCmd.PersistentFlags().String(constants.CfgTokenID, viper.GetString(constants.CfgTokenID),
-		"Openstack authentication token ID [OS_TOKEN_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgScopeProjectID, viper.GetString(constants.CfgScopeProjectID),
-		"Openstack scope project ID [OS_SCOPE_PROJECT_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgScopeProjectName, viper.GetString(constants.CfgScopeProjectName),
-		"Openstack scope project name [OS_SCOPE_PROJECT_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgScopeDomainID, viper.GetString(constants.CfgScopeDomainID),
-		"Openstack scope domain ID [OS_SCOPE_DOMAIN_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgScopeDomainName, viper.GetString(constants.CfgScopeDomainName),
-		"Openstack scope domain name [OS_SCOPE_DOMAIN_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgScopeSystem, viper.GetString(constants.CfgScopeSystem),
-		"Openstack scope system [OS_SCOPE_SYSTEM]")
-	goatOsCmd.PersistentFlags().String(constants.CfgAppCredentialID, viper.GetString(constants.CfgAppCredentialID),
-		"Openstack application credential ID [OS_APPCREDENTIAL_ID]")
-	goatOsCmd.PersistentFlags().String(constants.CfgAppCredentialName, viper.GetString(constants.CfgAppCredentialName),
-		"Openstack application credential name [OS_APPCREDENTIAL_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgAppCredentialSecret, viper.GetString(constants.CfgAppCredentialSecret),
-		"Openstack application credential secret [OS_APPCREDENTIAL_SECRET]")
-
-	goatOsCmd.PersistentFlags().String(constants.CfgEndpointType, viper.GetString(constants.CfgEndpointType),
-		"Openstack endpoint type [OS_ENDPOINT_TYPE]")
-	goatOsCmd.PersistentFlags().String(constants.CfgEndpointName, viper.GetString(constants.CfgEndpointName),
-		"Openstack endpoint name [OS_ENDPOINT_NAME]")
-	goatOsCmd.PersistentFlags().String(constants.CfgEndpointRegion, viper.GetString(constants.CfgEndpointRegion),
-		"Openstack endpoint region [OS_ENDPOINT_REGION]")
-	goatOsCmd.PersistentFlags().String(constants.CfgEndpointAvailability,
-		viper.GetString(constants.CfgEndpointAvailability),
-		"Openstack endpoint availability (public, internal, admin)")
-
-	goatOsCmd.PersistentFlags().StringP(constants.CfgDebug, "d", viper.GetString(constants.CfgDebug),
-		"debug")
-	goatOsCmd.PersistentFlags().String(constants.CfgLogPath, viper.GetString(constants.CfgLogPath), "path to log file")
-
+	createFlags(goatOsCmd, goatOsFlags, goatOsDescription, goatOsShorthand)
 	bindFlags(*goatOsCmd, goatOsFlags)
 
 	viper.SetDefault("author", "Lenka Svetlovska")
@@ -164,11 +144,21 @@ func initConfig() {
 	}
 }
 
+func createFlags(command *cobra.Command, flags []string, descriptions map[string]string, shorthands map[string]string) {
+	for _, flag := range flags {
+		if shorthands[flag] != "" {
+			command.PersistentFlags().StringP(parseFlagName(flag), shorthands[flag], viper.GetString(flag), descriptions[flag])
+		} else {
+			command.PersistentFlags().String(parseFlagName(flag), viper.GetString(flag), descriptions[flag])
+		}
+	}
+}
+
 func bindFlags(command cobra.Command, flagsForBinding []string) {
 	for _, flag := range flagsForBinding {
 		err := viper.BindPFlag(flag, command.PersistentFlags().Lookup(parseFlagName(flag)))
 		if err != nil {
-			log.WithFields(log.Fields{"error": err, "flag": flag}).Panic("unable to initialize flag")
+			log.WithFields(log.Fields{"error": err, "flag": flag}).Fatal("unable to initialize flag")
 		}
 	}
 }
