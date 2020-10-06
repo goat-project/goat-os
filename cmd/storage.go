@@ -12,6 +12,12 @@ var storageFlags = []string{constants.CfgSite}
 
 var storageRequired []string
 
+var storageDescription = map[string]string{
+	constants.CfgSite: "site [SITE]",
+}
+
+var storageShorthand = map[string]string{}
+
 var storageCmd = &cobra.Command{
 	Use:   "storage",
 	Short: "Extract storage data",
@@ -39,8 +45,6 @@ var storageCmd = &cobra.Command{
 func initStorage() {
 	goatOsCmd.AddCommand(storageCmd)
 
-	storageCmd.PersistentFlags().String(parseFlagName(constants.CfgSite),
-		viper.GetString(constants.CfgSite), "site [SITE]")
-
+	createFlags(storageCmd, storageFlags, storageDescription, storageShorthand)
 	bindFlags(*storageCmd, storageFlags)
 }
