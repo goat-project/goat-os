@@ -13,6 +13,14 @@ var networkFlags = []string{constants.CfgNetworkSiteName, constants.CfgNetworkCl
 
 var networkRequired = []string{constants.CfgNetworkSiteName, constants.CfgNetworkCloudType}
 
+var networkDescription = map[string]string{
+	constants.CfgNetworkSiteName:            "site name [NETWORK_SITE_NAME] (required)",
+	constants.CfgNetworkCloudType:           "cloud type [NETWORK_CLOUD_TYPE] (required)",
+	constants.CfgNetworkCloudComputeService: "cloud compute service [NETWORK_CLOUD_COMPUTE_SERVICE]",
+}
+
+var networkShorthand = map[string]string{}
+
 var networkCmd = &cobra.Command{
 	Use:   "network",
 	Short: "Extract network data",
@@ -40,13 +48,6 @@ var networkCmd = &cobra.Command{
 func initNetwork() {
 	goatOsCmd.AddCommand(networkCmd)
 
-	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkSiteName),
-		viper.GetString(constants.CfgNetworkSiteName), "site name [NETWORK_SITE_NAME] (required)")
-	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkCloudType),
-		viper.GetString(constants.CfgNetworkCloudType), "cloud type [NETWORK_CLOUD_TYPE] (required)")
-	networkCmd.PersistentFlags().String(parseFlagName(constants.CfgNetworkCloudComputeService),
-		viper.GetString(constants.CfgNetworkCloudComputeService),
-		"cloud compute service [NETWORK_CLOUD_COMPUTE_SERVICE]")
-
+	createFlags(networkCmd, networkFlags, networkDescription, networkShorthand)
 	bindFlags(*networkCmd, networkFlags)
 }
