@@ -12,6 +12,14 @@ var vmFlags = []string{constants.CfgSiteName, constants.CfgCloudType, constants.
 
 var vmRequired = []string{constants.CfgSiteName, constants.CfgCloudType}
 
+var vmDescription = map[string]string{
+	constants.CfgSiteName:            "site name [VM_SITE_NAME] (required)",
+	constants.CfgCloudType:           "cloud type [VM_CLOUD_TYPE] (required)",
+	constants.CfgCloudComputeService: "cloud compute service [VM_CLOUD_COMPUTE_SERVICE]",
+}
+
+var vmShorthand = map[string]string{}
+
 var vmCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Extract virtual machine data",
@@ -39,12 +47,6 @@ var vmCmd = &cobra.Command{
 func initVM() {
 	goatOsCmd.AddCommand(vmCmd)
 
-	vmCmd.PersistentFlags().String(parseFlagName(constants.CfgSiteName), viper.GetString(constants.CfgSiteName),
-		"site name [VM_SITE_NAME] (required)")
-	vmCmd.PersistentFlags().String(parseFlagName(constants.CfgCloudType), viper.GetString(constants.CfgCloudType),
-		"cloud type [VM_CLOUD_TYPE] (required)")
-	vmCmd.PersistentFlags().String(parseFlagName(constants.CfgCloudComputeService),
-		viper.GetString(constants.CfgCloudComputeService), "cloud compute service [VM_CLOUD_COMPUTE_SERVICE]")
-
+	createFlags(vmCmd, vmFlags, vmDescription, vmShorthand)
 	bindFlags(*vmCmd, vmFlags)
 }
