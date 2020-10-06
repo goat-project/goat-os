@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"path"
 
 	"github.com/goat-project/goat-os/constants"
 	"github.com/spf13/viper"
@@ -11,8 +12,8 @@ import (
 
 // Init initializes logrus by configuration.
 func Init() {
-	path := viper.GetString(constants.CfgLogPath)
-	switch path {
+	logPath := viper.GetString(constants.CfgLogPath)
+	switch logPath {
 	case "":
 		if viper.GetBool(constants.CfgDebug) {
 			InitLogToStdoutDebug()
@@ -21,9 +22,9 @@ func Init() {
 		}
 	default:
 		if viper.GetBool(constants.CfgDebug) {
-			InitLogToFileDebug(path)
+			InitLogToFileDebug(logPath)
 		} else {
-			InitLogToFile(path)
+			InitLogToFile(logPath)
 		}
 	}
 }
@@ -47,7 +48,7 @@ func InitLogToStdout() {
 func InitLogToFile(logPath string) {
 	logrus.SetFormatter(&logrus.TextFormatter{})
 
-	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
+	f, err := os.OpenFile(path.Clean(logPath), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 	if err != nil {
 		logrus.Fatalf("error opening file: %v", err)
 	}
