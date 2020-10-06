@@ -4,7 +4,7 @@
 # Settings from command line flags replace configuration settings.
 
 # Identifier of an instance (required)
-identifier: goat
+identifier: goat-os
 
 # The records are filtered by time. Filter allows the records
 # from time, to time or for a period. It cannot filter
@@ -48,7 +48,7 @@ openstack-timeout: 5m
 # Auth-options stores information needed to authenticate to
 # an OpenStack Cloud. (required)
 auth-options:
-  # Username is required if using Identity V2 API. 
+  # Username is required if using Identity V2 API.
   # In Identity V3, either user-id or a combination of username and
   # domain-id or domain-name are needed.
   username:
@@ -90,12 +90,11 @@ auth-options:
 
   # Scope determines the scoping of the authentication request.
   # It allows a created token to be limited to a specific domain or project.
-  scope:
-    project-id:
-    project-name:
-    domain-id:
-    domain-name:
-    system:
+  scope-project-id:
+  scope-project-name:
+  scope-domain-id:
+  scope-domain-name:
+  scope-system:
 
   # Authentication through Application Credentials requires supplying name,
   # project and secret. For project we can use tenant-id.

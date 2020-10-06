@@ -4,7 +4,7 @@ package constants
 const cfgAuthOptions = "auth-options."
 
 // prefix for scope
-const cfgScope = "scope."
+const cfgScope = "scope-"
 
 const (
 	// CfgUsername represents username to authenticate with password
@@ -30,14 +30,14 @@ const (
 	// CfgAllowReauth true to allow cache credentials in memory
 	CfgAllowReauth = cfgAuthOptions + "allow-reauth"
 
-	// CfgTokenID represents token ID to authenticate
+	// CfgTokenID represents token TenantID to authenticate
 	CfgTokenID = cfgAuthOptions + "token-id"
 
-	// CfgScopeProjectID represents scope project ID
+	// CfgScopeProjectID represents scope project TenantID
 	CfgScopeProjectID = cfgAuthOptions + cfgScope + "project-id"
 	// CfgScopeProjectName represents scope project name
 	CfgScopeProjectName = cfgAuthOptions + cfgScope + "project-name"
-	// CfgScopeDomainID represents scope domain ID
+	// CfgScopeDomainID represents scope domain TenantID
 	CfgScopeDomainID = cfgAuthOptions + cfgScope + "domain-id"
 	// CfgScopeDomainName represents scope domain name
 	CfgScopeDomainName = cfgAuthOptions + cfgScope + "domain-name"
