@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/goat-project/goat-os/cmd"
 
 func main() {
-	fmt.Println("Hello world!")
+	cmd.Initialize()
+	cmd.Execute()
 }
