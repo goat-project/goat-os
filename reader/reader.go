@@ -14,21 +14,16 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/spf13/viper"
-
 	"github.com/rafaeljesus/retry-go"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/pagination"
-
-	"github.com/goat-project/goat-os/constants"
 )
 
 // Reader structure to list resources and retrieve info for specific resource from Openstack.
 type Reader struct {
 	client      *gophercloud.ServiceClient
 	rateLimiter *rate.Limiter
-	timeout     time.Duration
 }
 
 type resourcesReaderI interface {
@@ -38,7 +33,7 @@ type resourcesReaderI interface {
 const attempts = 3
 const sleepTime = time.Second * 1
 
-// CreateReader creates reader with gophercloud client, rate limiter and timeout.
+// CreateReader creates reader with gophercloud client and rate limiter.
 func CreateReader(client *gophercloud.ServiceClient, limiter *rate.Limiter) *Reader {
 	if client == nil {
 		log.WithFields(log.Fields{"error": "client is empty"}).Fatal("error create ServerByID")
@@ -51,7 +46,6 @@ func CreateReader(client *gophercloud.ServiceClient, limiter *rate.Limiter) *Rea
 	return &Reader{
 		client:      client,
 		rateLimiter: limiter,
-		timeout:     viper.GetDuration(constants.CfgOpenstackTimeout),
 	}
 }
 

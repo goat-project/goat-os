@@ -18,9 +18,6 @@ const (
 	// CfgOpenstackIdentityEndpoint represents string of Openstack identity endpoint
 	CfgOpenstackIdentityEndpoint = "openstack-identity-endpoint"
 
-	// CfgOpenstackTimeout represents duration (timeout) for Openstack calls
-	CfgOpenstackTimeout = "openstack-timeout"
-
 	// CfgDebug represents true for debug mode; false otherwise
 	CfgDebug = "debug"
 
