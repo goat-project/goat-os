@@ -16,7 +16,7 @@ const version = "1.0.0"
 
 var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, constants.CfgRecordsTo,
 	constants.CfgRecordsForPeriod, constants.CfgGoatEndpoint, constants.CfgOpenstackIdentityEndpoint,
-	constants.CfgOpenstackTimeout, constants.CfgUsername, constants.CfgUserID, constants.CfgPassword,
+	constants.CfgUsername, constants.CfgUserID, constants.CfgPassword,
 	constants.CfgPasscode, constants.CfgDomainID, constants.CfgDomainName, constants.CfgTenantID,
 	constants.CfgTenantName, constants.CfgAllowReauth, constants.CfgTokenID, constants.CfgScopeProjectID,
 	constants.CfgScopeProjectName, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
@@ -25,7 +25,7 @@ var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, co
 	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath}
 
 var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
-	constants.CfgOpenstackIdentityEndpoint, constants.CfgOpenstackTimeout}
+	constants.CfgOpenstackIdentityEndpoint}
 
 var goatOsDescription = map[string]string{
 	constants.CfgIdentifier:       "goat identifier [IDENTIFIER] (required)",
@@ -35,7 +35,6 @@ var goatOsDescription = map[string]string{
 
 	constants.CfgGoatEndpoint:              "goat server [GOAT_SERVER_ENDPOINT] (required)",
 	constants.CfgOpenstackIdentityEndpoint: "Openstack identity endpoint [OS_IDENTITY_ENDPOINT] (required)",
-	constants.CfgOpenstackTimeout:          "timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)",
 
 	constants.CfgUsername:            "Openstack authentication username [OS_USERNAME]",
 	constants.CfgUserID:              "Openstack authentication user TenantID [OS_USER_ID]",

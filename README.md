@@ -46,7 +46,6 @@ Flags:
       --log-path string              path to log file
   -o, --openstack-endpoint string    Openstack endpoint [OPENSTACK_ENDPOINT] (required)
   -s, --openstack-secret string      Openstack secret [OPENSTACK_SECRET] (required)
-      --openstack-timeout string     timeout for Openstack calls [TIMEOUT_FOR_OPENSTACK_CALLS] (required)
   -p, --records-for-period string    records for period [TIME PERIOD]
   -f, --records-from string          records from [TIME]
   -t, --records-to string            records to [TIME]

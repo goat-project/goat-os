@@ -42,9 +42,6 @@ endpoint: 127.0.0.1:9623
 # Openstack identity endpoint (required)
 openstack-identity-endpoint: https://openstack.example.com:5000/v3
 
-# Timeout for Openstack calls (required)
-openstack-timeout: 5m
-
 # Auth-options stores information needed to authenticate to
 # an OpenStack Cloud. (required)
 auth-options:
