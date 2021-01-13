@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/goat-project/goat-os/auth"
 	"github.com/goat-project/goat-os/client"
 	"github.com/goat-project/goat-os/constants"
@@ -14,7 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
-	"time"
 )
 
 var vmFlags = []string{constants.CfgSiteName, constants.CfgCloudType, constants.CfgCloudComputeService}
