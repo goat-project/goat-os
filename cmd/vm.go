@@ -1,11 +1,20 @@
 package cmd
 
 import (
+	"github.com/goat-project/goat-os/auth"
+	"github.com/goat-project/goat-os/client"
 	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/filter"
 	"github.com/goat-project/goat-os/logger"
+	"github.com/goat-project/goat-os/preparer"
+	"github.com/goat-project/goat-os/processor"
+	"github.com/goat-project/goat-os/reader"
+	"github.com/goat-project/goat-os/resource/server"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/time/rate"
+	"time"
 )
 
 var vmFlags = []string{constants.CfgSiteName, constants.CfgCloudType, constants.CfgCloudComputeService}
@@ -39,8 +48,10 @@ var vmCmd = &cobra.Command{
 			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
 		}
 
-		// TODO set rate limiters
-		// TODO account virtual machine
+		readLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
+		writeLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
+
+		accountVM(readLimiter, writeLimiter)
 	},
 }
 
@@ -49,4 +60,26 @@ func initVM() {
 
 	createFlags(vmCmd, vmFlags, vmDescription, vmShorthand)
 	bindFlags(*vmCmd, vmFlags)
+}
+
+func accountVM(readLimiter, writeLimiter *rate.Limiter) {
+	osClient, err := auth.OpenstackClient()
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Openstack client")
+	}
+
+	computeClient, err := auth.CreateComputeV2ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Compute V2 service client")
+	}
+
+	read := reader.CreateReader(computeClient, readLimiter)
+
+	proc := processor.CreateProcessor(server.CreateProcessor(read))
+	filt := filter.CreateFilter(server.CreateFilter())
+	prep := preparer.CreatePreparer(server.CreatePreparer(read, writeLimiter, goatServerConnection()))
+
+	c := client.Client{}
+
+	c.Run(proc, filt, prep)
 }

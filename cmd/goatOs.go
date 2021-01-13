@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"google.golang.org/grpc"
+
 	"github.com/goat-project/goat-os/constants"
 	"github.com/goat-project/goat-os/logger"
 	"github.com/spf13/cobra"
@@ -13,6 +15,7 @@ import (
 )
 
 const version = "1.0.0"
+const requestsPerSecond = 30
 
 var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, constants.CfgRecordsTo,
 	constants.CfgRecordsForPeriod, constants.CfgGoatEndpoint, constants.CfgOpenstackIdentityEndpoint,
@@ -190,4 +193,13 @@ func checkRequired(required []string) error {
 	}
 
 	return nil
+}
+
+func goatServerConnection() *grpc.ClientConn {
+	conn, err := grpc.Dial(viper.GetString(constants.CfgGoatEndpoint), grpc.WithInsecure())
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Fatal("error connect to goat server via gRPC")
+	}
+
+	return conn
 }
