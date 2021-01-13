@@ -1,8 +1,9 @@
 package server
 
 import (
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"sync"
+
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 
 	"github.com/goat-project/goat-os/constants"
 
@@ -50,8 +51,8 @@ func (p *Processor) Process(read chan resource.Resource, swg *sizedwaitgroup.Siz
 		log.WithFields(log.Fields{"error": err /* todo add pageoffset */}).Fatal("error extract servers")
 	}
 
-	for _, v := range s {
-		read <- &v
+	for i := range s {
+		read <- &s[i]
 	}
 }
 
