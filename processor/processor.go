@@ -4,8 +4,6 @@ import (
 	"sync"
 
 	"github.com/goat-project/goat-os/resource"
-	"github.com/remeh/sizedwaitgroup"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,11 +13,9 @@ type Processor struct {
 }
 
 type processorI interface {
-	Process(chan resource.Resource, *sizedwaitgroup.SizedWaitGroup)
+	Process(chan resource.Resource, *sync.WaitGroup)
 	RetrieveInfo(chan resource.Resource, *sync.WaitGroup, resource.Resource)
 }
-
-const wgSize = 10
 
 // CreateProcessor creates Processor to manage reading from OpenNebula.
 func CreateProcessor(proc processorI) *Processor {
@@ -29,13 +25,13 @@ func CreateProcessor(proc processorI) *Processor {
 }
 
 // ListResources calls method to list resource from OpenNebula.
-func (p *Processor) ListResources(read chan resource.Resource) { // todo remove sized waitgroup
-	swg := sizedwaitgroup.New(wgSize + 1)
+func (p *Processor) ListResources(read chan resource.Resource) {
+	var wg sync.WaitGroup
 
-	swg.Add()
-	go p.proc.Process(read, &swg)
+	wg.Add(1)
+	go p.proc.Process(read, &wg)
 
-	swg.Wait()
+	wg.Wait()
 	close(read)
 }
 

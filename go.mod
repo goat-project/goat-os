@@ -14,12 +14,9 @@ require (
 	github.com/karrick/tparse/v2 v2.8.2
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
-	github.com/onego-project/onego v1.1.0 // indirect
-	github.com/onego-project/xmlrpc v1.1.0 // indirect
 	github.com/onsi/ginkgo v1.14.1
 	github.com/onsi/gomega v1.10.2
 	github.com/rafaeljesus/retry-go v0.0.0-20171214204623-5981a380a879
-	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5 // indirect

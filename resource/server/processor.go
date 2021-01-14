@@ -10,8 +10,6 @@ import (
 	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource"
 
-	"github.com/remeh/sizedwaitgroup"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,8 +31,8 @@ func CreateProcessor(r *reader.Reader) *Processor {
 }
 
 // Process provides listing of the servers with pagination.
-func (p *Processor) Process(read chan resource.Resource, swg *sizedwaitgroup.SizedWaitGroup) {
-	defer swg.Done()
+func (p *Processor) Process(read chan resource.Resource, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	servs, err := p.reader.ListAllServers()
 	if err != nil {
