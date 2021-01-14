@@ -17,9 +17,9 @@ type Client struct {
 // Run reads, filters and writes Accountable.
 func (c *Client) Run(processor processor.Interface, filter filter.Interface, preparer preparer.Interface) {
 	var mapWg sync.WaitGroup
-	//mapWg.Add(1)
+	mapWg.Add(1)
 
-	//go preparer.InitializeMaps(&mapWg)
+	go preparer.InitializeMaps(&mapWg)
 
 	// initialize channels
 	read := make(chan resource.Resource)

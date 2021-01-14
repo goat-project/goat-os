@@ -14,6 +14,7 @@ type Preparer struct {
 
 type preparerI interface {
 	Preparation(resource.Resource, *sync.WaitGroup)
+	InitializeMaps(*sync.WaitGroup)
 	SendIdentifier() error
 	Finish()
 }
@@ -55,4 +56,9 @@ func (p *Preparer) Prepare(fullInfo chan resource.Resource, done chan bool, mapW
 	}
 
 	done <- true
+}
+
+// InitializeMaps reads additional data for record.
+func (p *Preparer) InitializeMaps(wg *sync.WaitGroup) {
+	p.prep.InitializeMaps(wg)
 }

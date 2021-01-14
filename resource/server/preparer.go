@@ -1,24 +1,22 @@
 package server
 
 import (
+	"net"
 	"sync"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-
-	"google.golang.org/grpc"
-
-	"github.com/goat-project/goat-os/util"
-
+	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/initialize"
+	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource"
-
+	"github.com/goat-project/goat-os/util"
 	"github.com/goat-project/goat-os/writer"
 
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+
 	"golang.org/x/time/rate"
-
-	"github.com/goat-project/goat-os/reader"
-
-	"github.com/goat-project/goat-os/constants"
+	"google.golang.org/grpc"
 
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -26,19 +24,26 @@ import (
 	"github.com/spf13/viper"
 
 	pb "github.com/goat-project/goat-proto-go"
-
 	log "github.com/sirupsen/logrus"
 )
 
 // Preparer to prepare virtual machine data to specific structure for writing to Goat server.
 type Preparer struct {
-	reader reader.Reader
-	Writer writer.Writer
+	identityReader reader.Reader
+	computeReader  reader.Reader
+	Writer         writer.Writer
+	userIdentity   map[string]string
+	flavor         map[string]*flavors.Flavor
 }
 
 // CreatePreparer creates Preparer for virtual machine records.
-func CreatePreparer(reader *reader.Reader, limiter *rate.Limiter, conn *grpc.ClientConn) *Preparer {
-	if reader == nil {
+func CreatePreparer(ir *reader.Reader, cr *reader.Reader, limiter *rate.Limiter, conn *grpc.ClientConn) *Preparer {
+	if ir == nil {
+		log.WithFields(log.Fields{}).Error(constants.ErrCreatePrepReaderNil)
+		return nil
+	}
+
+	if cr == nil {
 		log.WithFields(log.Fields{}).Error(constants.ErrCreatePrepReaderNil)
 		return nil
 	}
@@ -54,9 +59,33 @@ func CreatePreparer(reader *reader.Reader, limiter *rate.Limiter, conn *grpc.Cli
 	}
 
 	return &Preparer{
-		reader: *reader,
-		Writer: *writer.CreateWriter(CreateWriter(limiter), conn),
+		identityReader: *ir,
+		computeReader:  *cr,
+		Writer:         *writer.CreateWriter(CreateWriter(limiter), conn),
 	}
+}
+
+// InitializeMaps reads additional data for virtual machine record.
+func (p *Preparer) InitializeMaps(wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		p.userIdentity = initialize.UserIdentity(p.identityReader)
+		if p.userIdentity == nil {
+			log.WithFields(log.Fields{"error": "map is empty"}).Error("error create user identity map")
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		p.flavor = initialize.Flavor(p.computeReader)
+		if p.flavor == nil {
+			log.WithFields(log.Fields{"error": "map is empty"}).Error("error create flavor map")
+		}
+	}()
 }
 
 // Preparation prepares virtual machine data for writing and call method to write.
@@ -64,8 +93,10 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	server := acc.(*servers.Server)
-	// todo check that the server is correct server (not nil, has all needed attributes,...)
-	id := server.ID
+	if server == nil {
+		log.WithFields(log.Fields{"error": "empty server"}).Error(constants.ErrPrepEmptyVM)
+		return
+	}
 
 	sTime := util.WrapTime(&server.Created)
 	t := time.Now()
@@ -73,9 +104,25 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	wallDuration := getWallDuration(sTime, eTime)
 
 	var cpuCount uint32
-	vcpus := server.Flavor["vcpus"]
-	if vcpus != nil {
-		cpuCount = vcpus.(uint32)
+	var memory *wrappers.UInt64Value
+	var diskSize *wrappers.UInt64Value
+
+	fid := server.Flavor["id"]
+	if fid != nil {
+		flavor := p.flavor[fid.(string)]
+		if flavor != nil {
+			cpuCount = uint32(flavor.VCPUs)
+
+			mem := uint64(flavor.RAM)
+			if mem != 0 {
+				memory = &wrappers.UInt64Value{Value: mem}
+			}
+
+			disk := uint64(flavor.Disk)
+			if disk != 0 {
+				diskSize = &wrappers.UInt64Value{Value: disk}
+			}
+		}
 	}
 
 	serverRecord := pb.VmRecord{
@@ -85,7 +132,7 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		MachineName:         server.Name,
 		LocalUserId:         util.WrapStr(server.UserID),
 		LocalGroupId:        util.WrapStr(server.TenantID),
-		GlobalUserName:      util.WrapStr(""), // todo get from map of Users
+		GlobalUserName:      getGlobalUserName(p, server),
 		Fqan:                getFqan(server.TenantID),
 		Status:              util.WrapStr(server.Status),
 		StartTime:           sTime,
@@ -98,8 +145,8 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		NetworkInbound:      nil, // todo?
 		NetworkOutbound:     nil, // todo?
 		PublicIpCount:       getPublicIPCount(server),
-		Memory:              getMemory(server),
-		Disk:                getDiskSizes(server),
+		Memory:              memory,
+		Disk:                diskSize,
 		BenchmarkType:       nil, // todo?
 		Benchmark:           nil, // todo?
 		StorageRecordId:     nil,
@@ -108,7 +155,7 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	}
 
 	if err := p.Writer.Write(&serverRecord); err != nil {
-		log.WithFields(log.Fields{"error": err, "id": id}).Error(constants.ErrPrepWrite)
+		log.WithFields(log.Fields{"error": err, "id": server.ID}).Error(constants.ErrPrepWrite)
 	}
 }
 
@@ -134,6 +181,14 @@ func getSiteName() string {
 
 func getCloudComputeService() *wrappers.StringValue {
 	return util.WrapStr(viper.GetString(constants.CfgCloudComputeService))
+}
+
+func getGlobalUserName(p *Preparer, server *servers.Server) *wrappers.StringValue {
+	if p.userIdentity != nil {
+		return util.WrapStr(p.userIdentity[server.ID])
+	}
+
+	return nil
 }
 
 func getFqan(tenantID string) *wrappers.StringValue {
@@ -169,43 +224,22 @@ func getCPUDuration(wallDuration *duration.Duration, cpuCount uint32) *duration.
 }
 
 func getPublicIPCount(server *servers.Server) *wrappers.UInt64Value {
-	addresses := server.Addresses["public"]
-	if addresses != nil {
-		ads := addresses.([]servers.Address)
-		length := len(ads)
-		if length < 1 {
-			return &wrappers.UInt64Value{Value: uint64(length)}
+	var sum int
+
+	for _, a := range server.Addresses {
+		for _, b := range a.([]interface{}) {
+			address := b.(map[string]interface{})["addr"]
+			if address != nil {
+				ip := net.ParseIP(address.(string))
+				if util.IsPublicIPv4(ip) {
+					sum++
+				}
+			}
 		}
 	}
 
-	return nil
-}
-
-func getMemory(server *servers.Server) *wrappers.UInt64Value {
-	ram := server.Flavor["ram"]
-	if ram != nil {
-		return util.WrapUint64(ram.(string))
-	}
-
-	return nil
-}
-
-func getDiskSizes(server *servers.Server) *wrappers.UInt64Value {
-	var disk *wrappers.UInt64Value
-	var ephemeral *wrappers.UInt64Value
-
-	d := server.Flavor["disk"]
-	if d != nil {
-		disk = util.WrapUint64(d.(string))
-	}
-
-	e := server.Flavor["ephemeral"]
-	if e != nil {
-		ephemeral = util.WrapUint64(e.(string))
-	}
-
-	if disk != nil && ephemeral != nil {
-		return &wrappers.UInt64Value{Value: disk.Value + ephemeral.Value}
+	if sum > 0 {
+		return &wrappers.UInt64Value{Value: uint64(sum)}
 	}
 
 	return nil

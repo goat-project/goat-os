@@ -74,11 +74,21 @@ func accountVM(readLimiter, writeLimiter *rate.Limiter) {
 		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Compute V2 service client")
 	}
 
-	read := reader.CreateReader(computeClient, readLimiter)
+	computeReader := reader.CreateReader(computeClient, readLimiter)
 
-	proc := processor.CreateProcessor(server.CreateProcessor(read))
+	proc := processor.CreateProcessor(server.CreateProcessor(computeReader))
 	filt := filter.CreateFilter(server.CreateFilter())
-	prep := preparer.CreatePreparer(server.CreatePreparer(read, writeLimiter, goatServerConnection()))
+
+	identityClient, err := auth.CreateIdentityV3ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("unable to create Identity V3 service client")
+
+	}
+
+	identityReader := reader.CreateReader(identityClient, readLimiter)
+
+	prep := preparer.CreatePreparer(
+		server.CreatePreparer(identityReader, computeReader, writeLimiter, goatServerConnection()))
 
 	c := client.Client{}
 

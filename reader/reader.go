@@ -76,6 +76,11 @@ func (r *Reader) ListAllUsers() (pagination.Pager, error) {
 	return r.readResources(&resource.UserReader{})
 }
 
+// ListAllFlavors lists all flavors from Openstack.
+func (r *Reader) ListAllFlavors() (pagination.Pager, error) {
+	return r.readResources(&resource.FlavorReader{})
+}
+
 // ListAllImages lists all images from Openstack.
 func (r *Reader) ListAllImages() (pagination.Pager, error) {
 	return r.readResources(&storageReader.Image{})
