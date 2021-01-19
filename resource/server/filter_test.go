@@ -36,7 +36,7 @@ var _ = ginkgo.Describe("Server Filter tests", func() {
 
 				gomega.Expect(filter.recordsFrom).To(gomega.Equal(time.Time{}))
 				gomega.Expect(filter.recordsTo).To(gomega.And(
-					gomega.BeTemporally("<", time.Now()),
+					gomega.BeTemporally("<", time.Now().Add(time.Minute)),
 					gomega.BeTemporally(">", time.Now().Add(-time.Minute))))
 			})
 		})
@@ -52,7 +52,7 @@ var _ = ginkgo.Describe("Server Filter tests", func() {
 
 				gomega.Expect(filter.recordsFrom).To(gomega.Equal(dateFrom))
 				gomega.Expect(filter.recordsTo).To(gomega.And(
-					gomega.BeTemporally("<", time.Now()),
+					gomega.BeTemporally("<", time.Now().Add(time.Minute)),
 					gomega.BeTemporally(">", time.Now().Add(-time.Minute))))
 			})
 		})
@@ -114,19 +114,19 @@ var _ = ginkgo.Describe("Server Filter tests", func() {
 				filter := CreateFilter()
 
 				// handle leap year
-				days := 356
-				if isLeapYear(time.Now().Year()) {
+				days := 365
+				if isLeapYear(time.Now().Year()) || (isLeapYear(time.Now().Year()-1) && time.Now().Month() < 3) {
 					days = 366
 				}
 
 				expectation := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
 
 				gomega.Expect(filter.recordsFrom).To(gomega.And(
-					gomega.BeTemporally("<", expectation),
+					gomega.BeTemporally("<", expectation.Add(time.Minute)),
 					gomega.BeTemporally(">", expectation.Add(-time.Minute))))
 
 				gomega.Expect(filter.recordsTo).To(gomega.And(
-					gomega.BeTemporally("<", time.Now()),
+					gomega.BeTemporally("<", time.Now().Add(time.Minute)),
 					gomega.BeTemporally(">", time.Now().Add(-time.Minute))))
 			})
 		})
