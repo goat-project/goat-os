@@ -2,10 +2,13 @@ package processor
 
 import (
 	"github.com/goat-project/goat-os/resource"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 )
 
 // Interface to process Resource data.
 type Interface interface {
-	ListResources(chan resource.Resource)
+	ListProjects(chan projects.Project)
+	ListResources(chan projects.Project, chan resource.Resource, gophercloud.AuthOptions)
 	RetrieveInfoResource(chan resource.Resource, chan resource.Resource)
 }
