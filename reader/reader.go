@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"context"
 	"time"
 
 	"github.com/goat-project/goat-os/resource"
@@ -9,8 +8,6 @@ import (
 	networkReader "github.com/goat-project/goat-os/resource/network/reader"
 	serverReader "github.com/goat-project/goat-os/resource/server/reader"
 	storageReader "github.com/goat-project/goat-os/resource/storage/reader"
-
-	"golang.org/x/time/rate"
 
 	log "github.com/sirupsen/logrus"
 
@@ -22,8 +19,7 @@ import (
 
 // Reader structure to list resources and retrieve info for specific resource from Openstack.
 type Reader struct {
-	client      *gophercloud.ServiceClient
-	rateLimiter *rate.Limiter
+	client *gophercloud.ServiceClient
 }
 
 type resourcesReaderI interface {
@@ -33,19 +29,14 @@ type resourcesReaderI interface {
 const attempts = 3
 const sleepTime = time.Second * 1
 
-// CreateReader creates reader with gophercloud client and rate limiter.
-func CreateReader(client *gophercloud.ServiceClient, limiter *rate.Limiter) *Reader {
+// CreateReader creates reader with gophercloud service client.
+func CreateReader(client *gophercloud.ServiceClient) *Reader {
 	if client == nil {
-		log.WithFields(log.Fields{"error": "client is empty"}).Fatal("error create ServerByID")
+		log.WithFields(log.Fields{"error": "client is empty"}).Fatal("error create reader")
 	}
 
-	log.WithFields(log.Fields{"attempts": attempts, "sleepTime": sleepTime}).Debug("ServerByID created " +
-		"with given settings for number of iterations for unsuccessful calls and " +
-		"sleep time between the calls")
-
 	return &Reader{
-		client:      client,
-		rateLimiter: limiter,
+		client: client,
 	}
 }
 
@@ -54,10 +45,6 @@ func (r *Reader) readResources(rri resourcesReaderI) (pagination.Pager, error) {
 	var err error
 
 	err = retry.Do(func() error {
-		if err = r.rateLimiter.Wait(context.Background()); err != nil {
-			log.WithFields(log.Fields{"error": err}).Fatal("error list resources")
-		}
-
 		pager = rri.ReadResources(r.client)
 
 		return err
