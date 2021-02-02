@@ -2,7 +2,7 @@ package reader
 
 import (
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
@@ -13,5 +13,5 @@ type FloatingIP struct {
 
 // ReadResources reads a server info.
 func (r *FloatingIP) ReadResources(client *gophercloud.ServiceClient) pagination.Pager {
-	return floatingips.List(client, floatingips.ListOpts{TenantID: r.TenantID})
+	return floatingips.List(client)
 }
