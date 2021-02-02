@@ -3,6 +3,12 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"sync"
+	"time"
+
+	"golang.org/x/time/rate"
+
+	"github.com/gophercloud/gophercloud"
 
 	"google.golang.org/grpc"
 
@@ -97,8 +103,15 @@ var goatOsCmd = &cobra.Command{
 			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
 		}
 
-		// TODO set rate limiters
-		// TODO account vm, network, storage
+		writeLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
+
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		go accountVM(writeLimiter, &wg)
+		wg.Wait()
+		// TODO account network
+		// TODO account storage
 	},
 }
 
@@ -202,4 +215,30 @@ func goatServerConnection() *grpc.ClientConn {
 	}
 
 	return conn
+}
+
+func options() gophercloud.AuthOptions {
+	return gophercloud.AuthOptions{
+		IdentityEndpoint: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
+		Username:         viper.GetString(constants.CfgUsername),
+		UserID:           viper.GetString(constants.CfgUserID),
+		Password:         viper.GetString(constants.CfgPassword),
+		Passcode:         viper.GetString(constants.CfgPasscode),
+		DomainID:         viper.GetString(constants.CfgDomainID),
+		DomainName:       viper.GetString(constants.CfgDomainName),
+		TenantID:         viper.GetString(constants.CfgTenantID),
+		TenantName:       viper.GetString(constants.CfgTenantName),
+		AllowReauth:      viper.GetBool(constants.CfgAllowReauth),
+		TokenID:          viper.GetString(constants.CfgTokenID),
+		Scope: &gophercloud.AuthScope{
+			ProjectID:   viper.GetString(constants.CfgScopeProjectID),
+			ProjectName: viper.GetString(constants.CfgScopeProjectName),
+			DomainID:    viper.GetString(constants.CfgScopeDomainID),
+			DomainName:  viper.GetString(constants.CfgScopeDomainName),
+			System:      viper.GetBool(constants.CfgScopeSystem),
+		},
+		ApplicationCredentialID:     viper.GetString(constants.CfgAppCredentialID),
+		ApplicationCredentialName:   viper.GetString(constants.CfgAppCredentialName),
+		ApplicationCredentialSecret: viper.GetString(constants.CfgAppCredentialSecret),
+	}
 }

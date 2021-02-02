@@ -1,16 +1,18 @@
 package cmd
 
 import (
+	"sync"
 	"time"
 
 	"github.com/goat-project/goat-os/auth"
+	"github.com/goat-project/goat-os/reader"
+
 	"github.com/goat-project/goat-os/client"
 	"github.com/goat-project/goat-os/constants"
 	"github.com/goat-project/goat-os/filter"
 	"github.com/goat-project/goat-os/logger"
 	"github.com/goat-project/goat-os/preparer"
 	"github.com/goat-project/goat-os/processor"
-	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource/server"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,10 +51,13 @@ var vmCmd = &cobra.Command{
 			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
 		}
 
-		readLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
 		writeLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
 
-		accountVM(readLimiter, writeLimiter)
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		go accountVM(writeLimiter, &wg)
+		wg.Wait()
 	},
 }
 
@@ -63,10 +68,19 @@ func initVM() {
 	bindFlags(*vmCmd, vmFlags)
 }
 
-func accountVM(readLimiter, writeLimiter *rate.Limiter) {
-	osClient, err := auth.OpenstackClient()
+func accountVM(writeLimiter *rate.Limiter, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	opts := options()
+
+	osClient, err := auth.OpenstackClient(opts)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Openstack client")
+	}
+
+	identityClient, err := auth.CreateIdentityV3ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Identity V3 service client")
 	}
 
 	computeClient, err := auth.CreateComputeV2ServiceClient(osClient)
@@ -74,23 +88,11 @@ func accountVM(readLimiter, writeLimiter *rate.Limiter) {
 		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Compute V2 service client")
 	}
 
-	computeReader := reader.CreateReader(computeClient, readLimiter)
-
-	proc := processor.CreateProcessor(server.CreateProcessor(computeReader))
+	prep := preparer.CreatePreparer(server.CreatePreparer(reader.CreateReader(identityClient),
+		reader.CreateReader(computeClient), writeLimiter, goatServerConnection()))
+	proc := processor.CreateProcessor(server.CreateProcessor(reader.CreateReader(identityClient)))
 	filt := filter.CreateFilter(server.CreateFilter())
 
-	identityClient, err := auth.CreateIdentityV3ServiceClient(osClient)
-	if err != nil {
-		log.WithFields(log.Fields{"err": err}).Error("unable to create Identity V3 service client")
-
-	}
-
-	identityReader := reader.CreateReader(identityClient, readLimiter)
-
-	prep := preparer.CreatePreparer(
-		server.CreatePreparer(identityReader, computeReader, writeLimiter, goatServerConnection()))
-
 	c := client.Client{}
-
-	c.Run(proc, filt, prep)
+	c.Run(proc, filt, prep, opts)
 }

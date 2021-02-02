@@ -13,5 +13,5 @@ type Servers struct {
 
 // ReadResources reads servers.
 func (r *Servers) ReadResources(client *gophercloud.ServiceClient) pagination.Pager {
-	return servers.List(client, servers.ListOpts{})
+	return servers.List(client, nil)
 }
