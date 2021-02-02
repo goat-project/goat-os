@@ -9,30 +9,8 @@ import (
 
 // OpenstackClient logs in to an OpenStack cloud found at the identity endpoint specified by the options,
 // acquires a token, and returns a Provider Client instance that's ready to operate.
-func OpenstackClient() (*gophercloud.ProviderClient, error) {
-	return openstack.AuthenticatedClient(gophercloud.AuthOptions{
-		IdentityEndpoint: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
-		Username:         viper.GetString(constants.CfgUsername),
-		UserID:           viper.GetString(constants.CfgUserID),
-		Password:         viper.GetString(constants.CfgPassword),
-		Passcode:         viper.GetString(constants.CfgPasscode),
-		DomainID:         viper.GetString(constants.CfgDomainID),
-		DomainName:       viper.GetString(constants.CfgDomainName),
-		TenantID:         viper.GetString(constants.CfgTenantID),
-		TenantName:       viper.GetString(constants.CfgTenantName),
-		AllowReauth:      viper.GetBool(constants.CfgAllowReauth),
-		TokenID:          viper.GetString(constants.CfgTokenID),
-		Scope: &gophercloud.AuthScope{
-			ProjectID:   viper.GetString(constants.CfgScopeProjectID),
-			ProjectName: viper.GetString(constants.CfgScopeProjectName),
-			DomainID:    viper.GetString(constants.CfgScopeDomainID),
-			DomainName:  viper.GetString(constants.CfgDomainName),
-			System:      viper.GetBool(constants.CfgScopeSystem),
-		},
-		ApplicationCredentialID:     viper.GetString(constants.CfgAppCredentialID),
-		ApplicationCredentialName:   viper.GetString(constants.CfgAppCredentialName),
-		ApplicationCredentialSecret: viper.GetString(constants.CfgAppCredentialSecret),
-	})
+func OpenstackClient(opts gophercloud.AuthOptions) (*gophercloud.ProviderClient, error) {
+	return openstack.AuthenticatedClient(opts)
 }
 
 // CreateIdentityV3ServiceClient creates a ServiceClient that may be used to access the v3 identity service.
