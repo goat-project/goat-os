@@ -3,12 +3,14 @@ package server
 import (
 	"sync"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-
+	"github.com/goat-project/goat-os/auth"
 	"github.com/goat-project/goat-os/constants"
-
 	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource"
+
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -30,23 +32,44 @@ func CreateProcessor(r *reader.Reader) *Processor {
 	}
 }
 
+func (p *Processor) createReader(osClient *gophercloud.ProviderClient) {
+	cClient, err := auth.CreateComputeV2ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("unable to create Compute V2 service client")
+		return
+	}
+
+	p.reader = *reader.CreateReader(cClient)
+}
+
+// Reader gets reader.
+func (p *Processor) Reader() *reader.Reader {
+	return &p.reader
+}
+
 // Process provides listing of the servers with pagination.
-func (p *Processor) Process(read chan resource.Resource, wg *sync.WaitGroup) {
+func (p *Processor) Process(_ projects.Project, osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	wg *sync.WaitGroup) {
 	defer wg.Done()
+
+	p.createReader(osClient)
 
 	servs, err := p.reader.ListAllServers()
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Fatal("error list servers")
+		log.WithFields(log.Fields{"error": err}).Error("error list servers")
+		return
 	}
 
 	pages, err := servs.AllPages() // todo add openstack pagination and wg
 	if err != nil {
-		log.WithFields(log.Fields{"error": err /* todo add pageoffset */}).Fatal("error get server pages")
+		log.WithFields(log.Fields{"error": err}).Error("error get server pages")
+		return
 	}
 
 	s, err := servers.ExtractServers(pages)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err /* todo add pageoffset */}).Fatal("error extract servers")
+		log.WithFields(log.Fields{"error": err}).Error("error extract servers")
+		return
 	}
 
 	for i := range s {
@@ -57,18 +80,6 @@ func (p *Processor) Process(read chan resource.Resource, wg *sync.WaitGroup) {
 // RetrieveInfo calls method to retrieve server info.
 func (p *Processor) RetrieveInfo(fullInfo chan resource.Resource, wg *sync.WaitGroup, vm resource.Resource) {
 	defer wg.Done()
-
-	// todo do we need any other info for server?
-	//id, err := vm.ID()
-	//if err != nil {
-	//	log.WithFields(log.Fields{"error": err}).Fatal("error get virtual machine id")
-	//}
-	//
-	//v, err := p.reader.RetrieveVirtualMachineInfo(id)
-	//if err != nil {
-	//	log.WithFields(log.Fields{"error": err}).Fatal("error retrieve virtual machine info")
-	//}
-	//
 
 	if vm == nil {
 		log.WithFields(log.Fields{}).Debug("retrieve info no vm")
