@@ -107,10 +107,10 @@ var goatOsCmd = &cobra.Command{
 
 		var wg sync.WaitGroup
 
-		wg.Add(1)
+		wg.Add(2)
 		go accountVM(writeLimiter, &wg)
+		go accountNetwork(writeLimiter, &wg)
 		wg.Wait()
-		// TODO account network
 		// TODO account storage
 	},
 }

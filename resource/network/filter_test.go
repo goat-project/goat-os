@@ -4,16 +4,14 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
-
-	"github.com/gophercloud/gophercloud/openstack/identity/v3/users"
-
+	"github.com/goat-project/goat-os/resource"
 	"github.com/goat-project/goat-os/resource/network"
 
-	"github.com/onsi/gomega"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 
-	"github.com/goat-project/goat-os/resource"
 	"github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 )
 
 var _ = ginkgo.Describe("Network Filter tests", func() {
@@ -61,9 +59,9 @@ var _ = ginkgo.Describe("Network Filter tests", func() {
 	})
 })
 
-func createTestNetwork(userID int) *network.NetUser {
+func createTestNetwork(id int) *network.NetUser {
 	return &network.NetUser{
-		User:        &users.User{ID: strconv.Itoa(userID)},
+		Project:     &projects.Project{ID: strconv.Itoa(id)},
 		FloatingIPs: []floatingips.FloatingIP{{ID: "1"}, {ID: "2"}},
 	}
 }
