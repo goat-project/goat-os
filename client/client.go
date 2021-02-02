@@ -3,6 +3,9 @@ package client
 import (
 	"sync"
 
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
+
 	"github.com/goat-project/goat-os/resource"
 
 	"github.com/goat-project/goat-os/filter"
@@ -15,13 +18,15 @@ type Client struct {
 }
 
 // Run reads, filters and writes Accountable.
-func (c *Client) Run(processor processor.Interface, filter filter.Interface, preparer preparer.Interface) {
+func (c *Client) Run(processor processor.Interface, filter filter.Interface, preparer preparer.Interface,
+	opts gophercloud.AuthOptions) {
 	var mapWg sync.WaitGroup
 	mapWg.Add(1)
 
 	go preparer.InitializeMaps(&mapWg)
 
 	// initialize channels
+	projs := make(chan projects.Project)
 	read := make(chan resource.Resource)
 	filtered := make(chan resource.Resource)
 	fullInfo := make(chan resource.Resource)
@@ -30,7 +35,9 @@ func (c *Client) Run(processor processor.Interface, filter filter.Interface, pre
 	done := make(chan bool)
 	defer close(done)
 
-	go processor.ListResources(read)
+	go processor.ListProjects(projs)
+
+	go processor.ListResources(projs, read, opts)
 	go filter.Filter(read, filtered)
 	go processor.RetrieveInfoResource(filtered, fullInfo)
 	go preparer.Prepare(fullInfo, done, &mapWg)
