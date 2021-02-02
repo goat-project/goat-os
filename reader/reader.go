@@ -78,9 +78,12 @@ func (r *Reader) ListAllShares() (pagination.Pager, error) {
 	return r.readResources(&storageReader.Share{})
 }
 
-// FloatingIPs lists all floating ips.
-func (r *Reader) FloatingIPs(id string) (pagination.Pager, error) {
-	return r.readResources(&networkReader.FloatingIP{
-		TenantID: id,
-	})
+// ListFloatingIPs lists all floating ips.
+func (r *Reader) ListFloatingIPs() (pagination.Pager, error) {
+	return r.readResources(&networkReader.FloatingIP{})
+}
+
+// ListAvailableProjects lists all available projects.
+func (r *Reader) ListAvailableProjects() (pagination.Pager, error) {
+	return r.readResources(&resource.ProjectReader{})
 }
