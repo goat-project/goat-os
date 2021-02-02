@@ -10,7 +10,8 @@ require (
 	github.com/goat-project/goat-proto-go v0.0.0-20181206140223-f24ada67b5ee
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.4 // indirect
-	github.com/gophercloud/gophercloud v0.13.0
+	github.com/gophercloud/gophercloud v0.15.1-0.20210123190020-7d4ec67e8c6c
+	github.com/gophercloud/utils v0.0.0-20210125092539-ef82cbe29e1f // indirect
 	github.com/karrick/tparse/v2 v2.8.2
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
