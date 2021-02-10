@@ -1,11 +1,22 @@
 package cmd
 
 import (
+	"sync"
+	"time"
+
+	"github.com/goat-project/goat-os/auth"
+	"github.com/goat-project/goat-os/client"
 	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/filter"
 	"github.com/goat-project/goat-os/logger"
+	"github.com/goat-project/goat-os/preparer"
+	"github.com/goat-project/goat-os/processor"
+	"github.com/goat-project/goat-os/reader"
+	"github.com/goat-project/goat-os/resource/storage"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/time/rate"
 )
 
 var storageFlags = []string{constants.CfgSite}
@@ -37,8 +48,13 @@ var storageCmd = &cobra.Command{
 			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
 		}
 
-		// TODO set rate limiters
-		// TODO account storage
+		writeLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)
+
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+		go accountStorage(writeLimiter, &wg)
+		wg.Wait()
 	},
 }
 
@@ -47,4 +63,28 @@ func initStorage() {
 
 	createFlags(storageCmd, storageFlags, storageDescription, storageShorthand)
 	bindFlags(*storageCmd, storageFlags)
+}
+
+func accountStorage(writeLimiter *rate.Limiter, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	opts := options()
+
+	osClient, err := auth.OpenstackClient(opts)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Openstack client")
+	}
+
+	identityClient, err := auth.CreateIdentityV3ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Identity V3 service client")
+	}
+
+	prep := preparer.CreatePreparer(storage.CreatePreparer(reader.CreateReader(identityClient), writeLimiter,
+		goatServerConnection()))
+	proc := processor.CreateProcessor(storage.CreateProcessor(reader.CreateReader(identityClient)))
+	filt := filter.CreateFilter(storage.CreateFilter())
+
+	c := client.Client{}
+	c.Run(proc, filt, prep, opts)
 }
