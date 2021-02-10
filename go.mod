@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.75.0
+	github.com/beevik/guid v0.0.0-20170504223318-d0ea8faecee0
 	github.com/goat-project/goat-proto-go v0.0.0-20181206140223-f24ada67b5ee
 	github.com/golang/protobuf v1.4.3
 	github.com/gophercloud/gophercloud v0.15.1-0.20210123190020-7d4ec67e8c6c
