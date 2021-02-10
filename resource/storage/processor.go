@@ -11,6 +11,7 @@ import (
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -32,10 +33,20 @@ func CreateProcessor(r *reader.Reader) *Processor {
 	}
 }
 
-func (p *Processor) createReader(osClient *gophercloud.ProviderClient) {
+func (p *Processor) createComputeReader(osClient *gophercloud.ProviderClient) {
 	cClient, err := auth.CreateComputeV2ServiceClient(osClient)
 	if err != nil {
 		log.WithFields(log.Fields{"err": err}).Error("unable to create Compute V2 service client")
+		return
+	}
+
+	p.reader = *reader.CreateReader(cClient)
+}
+
+func (p *Processor) createSharesReader(osClient *gophercloud.ProviderClient) {
+	cClient, err := auth.CreateSharedFileSystemV2ServiceClient(osClient)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
 		return
 	}
 
@@ -52,7 +63,12 @@ func (p *Processor) Process(_ projects.Project, osClient *gophercloud.ProviderCl
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	p.createReader(osClient)
+	p.processImages(osClient, read)
+	p.processShares(osClient, read)
+}
+
+func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read chan resource.Resource) {
+	p.createComputeReader(osClient)
 
 	imgs, err := p.reader.ListAllImages()
 	if err != nil {
@@ -69,6 +85,32 @@ func (p *Processor) Process(_ projects.Project, osClient *gophercloud.ProviderCl
 	s, err := images.ExtractImages(pages)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error extract images")
+		return
+	}
+
+	for i := range s {
+		read <- &s[i]
+	}
+}
+
+func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read chan resource.Resource) {
+	p.createSharesReader(osClient)
+
+	shrs, err := p.reader.ListAllShares()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list shares")
+		return
+	}
+
+	pages, err := shrs.AllPages() // todo add openstack pagination and wg
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error get share pages")
+		return
+	}
+
+	s, err := shares.ExtractShares(pages)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract shares")
 		return
 	}
 

@@ -14,6 +14,7 @@ import (
 	pb "github.com/goat-project/goat-proto-go"
 
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
@@ -73,40 +74,23 @@ func (p *Preparer) InitializeMaps(wg *sync.WaitGroup) {
 func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	storage := acc.(*images.Image)
-	if storage == nil {
-		log.WithFields(log.Fields{"error": "no image"}).Error(constants.ErrPrepEmptyImage)
+	var storageRecord *pb.StorageRecord
+
+	switch t := acc.(type) {
+	case *images.Image:
+		storageRecord = prepareImage(t)
+	case *shares.Share:
+		storageRecord = prepareShare(t)
+	default:
+		log.WithFields(log.Fields{"type": t}).Error("error unknown type")
+	}
+
+	if storageRecord == nil {
+		log.WithFields(log.Fields{"error": "no storage record"}).Error(constants.ErrPrepEmptyImage)
 		return
 	}
 
-	startTime := util.WrapTime(&storage.CreatedAt)
-	now := time.Now().Unix()
-	size := uint64(storage.SizeBytes)
-
-	storageRecord := pb.StorageRecord{
-		RecordID:      guid.New().String(),
-		CreateTime:    &timestamp.Timestamp{Seconds: now},
-		StorageSystem: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
-		Site:          util.WrapStr(viper.GetString(constants.CfgSite)),
-		StorageShare:  util.WrapStr("image"), // todo rozlisit o aky typ ide - image, share (volume, swift)
-		StorageMedia:  &wrappers.StringValue{Value: "disk"},
-		// StorageClass: nil,
-		FileCount: util.WrapStr(storage.File), // pre ostatne "1"
-		// DirectoryPath: nil,
-		LocalUser:    util.WrapStr(storage.Owner), // todo owner user id
-		LocalGroup:   util.WrapStr(storage.Owner),
-		UserIdentity: util.WrapStr(storage.Owner), // todo - owner's name
-		Group:        util.WrapStr("/" + storage.Owner + "/Role=NULL/Capability=NULL"),
-		// GroupAttribute: nil,
-		// GroupAttributeType: nil,
-		StartTime:                 startTime,
-		EndTime:                   &timestamp.Timestamp{Seconds: now},
-		ResourceCapacityUsed:      size,
-		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
-		ResourceCapacityAllocated: &wrappers.UInt64Value{Value: size}, // todo - count
-	}
-
-	if err := p.Writer.Write(&storageRecord); err != nil {
+	if err := p.Writer.Write(storageRecord); err != nil {
 		log.WithFields(log.Fields{"error": err}).Error(constants.ErrPrepWrite)
 	}
 }
@@ -120,4 +104,62 @@ func (p *Preparer) SendIdentifier() error {
 // Then, it closes the gRPC connection.
 func (p *Preparer) Finish() {
 	p.Writer.Finish()
+}
+
+func prepareImage(storage *images.Image) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.CreatedAt)
+	now := time.Now().Unix()
+	size := uint64(storage.SizeBytes)
+
+	return &pb.StorageRecord{
+		RecordID:      guid.New().String(),
+		CreateTime:    &timestamp.Timestamp{Seconds: now},
+		StorageSystem: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
+		Site:          util.WrapStr(viper.GetString(constants.CfgSite)),
+		StorageShare:  util.WrapStr("image"),
+		StorageMedia:  &wrappers.StringValue{Value: "disk"},
+		// StorageClass: nil,
+		FileCount: util.WrapStr(storage.File),
+		// DirectoryPath: nil,
+		LocalUser:    util.WrapStr(storage.Owner), // todo owner user id
+		LocalGroup:   util.WrapStr(storage.Owner),
+		UserIdentity: util.WrapStr(storage.Owner), // todo - owner's name
+		Group:        util.WrapStr("/" + storage.Owner + "/Role=NULL/Capability=NULL"),
+		// GroupAttribute: nil,
+		// GroupAttributeType: nil,
+		StartTime:                 startTime,
+		EndTime:                   &timestamp.Timestamp{Seconds: now},
+		ResourceCapacityUsed:      size,
+		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
+		ResourceCapacityAllocated: &wrappers.UInt64Value{Value: size}, // todo - count
+	}
+}
+
+func prepareShare(storage *shares.Share) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.CreatedAt)
+	now := time.Now().Unix()
+	size := uint64(storage.Size)
+
+	return &pb.StorageRecord{
+		RecordID:      guid.New().String(),
+		CreateTime:    &timestamp.Timestamp{Seconds: now},
+		StorageSystem: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
+		Site:          util.WrapStr(viper.GetString(constants.CfgSite)),
+		StorageShare:  util.WrapStr("share"),
+		StorageMedia:  &wrappers.StringValue{Value: "disk"},
+		// StorageClass: nil,
+		FileCount: util.WrapStr("1"),
+		// DirectoryPath: nil,
+		LocalUser:    util.WrapStr(storage.ProjectID), // todo owner user id
+		LocalGroup:   util.WrapStr(storage.ProjectID),
+		UserIdentity: util.WrapStr(storage.ProjectID), // todo - owner's name
+		Group:        util.WrapStr("/" + storage.ProjectID + "/Role=NULL/Capability=NULL"),
+		// GroupAttribute: nil,
+		// GroupAttributeType: nil,
+		StartTime:                 startTime,
+		EndTime:                   &timestamp.Timestamp{Seconds: now},
+		ResourceCapacityUsed:      size,
+		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
+		ResourceCapacityAllocated: &wrappers.UInt64Value{Value: size}, // todo - count
+	}
 }
