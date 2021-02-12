@@ -185,7 +185,7 @@ func getCloudComputeService() *wrappers.StringValue {
 
 func getGlobalUserName(p *Preparer, server *servers.Server) *wrappers.StringValue {
 	if p.userIdentity != nil {
-		return util.WrapStr(p.userIdentity[server.ID])
+		return util.WrapStr(p.userIdentity[server.UserID])
 	}
 
 	return nil
