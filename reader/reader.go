@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/goat-project/goat-os/resource"
-
 	networkReader "github.com/goat-project/goat-os/resource/network/reader"
 	serverReader "github.com/goat-project/goat-os/resource/server/reader"
 	storageReader "github.com/goat-project/goat-os/resource/storage/reader"
@@ -54,8 +53,8 @@ func (r *Reader) readResources(rri resourcesReaderI) (pagination.Pager, error) {
 }
 
 // ListAllServers lists all servers from Openstack.
-func (r *Reader) ListAllServers() (pagination.Pager, error) {
-	return r.readResources(&serverReader.Servers{})
+func (r *Reader) ListAllServers(id string) (pagination.Pager, error) {
+	return r.readResources(&serverReader.Servers{ProjectID: id})
 }
 
 // ListAllUsers lists all users from Openstack.
@@ -69,13 +68,18 @@ func (r *Reader) ListAllFlavors() (pagination.Pager, error) {
 }
 
 // ListAllImages lists all images from Openstack.
-func (r *Reader) ListAllImages() (pagination.Pager, error) {
-	return r.readResources(&storageReader.Image{})
+func (r *Reader) ListAllImages(id string) (pagination.Pager, error) {
+	return r.readResources(&storageReader.Image{ProjectID: id})
 }
 
 // ListAllShares lists all shares from Openstack.
-func (r *Reader) ListAllShares() (pagination.Pager, error) {
-	return r.readResources(&storageReader.Share{})
+func (r *Reader) ListAllShares(id string) (pagination.Pager, error) {
+	return r.readResources(&storageReader.Share{ProjectID: id})
+}
+
+// ListAllVolumes lists all volumes.
+func (r *Reader) ListAllVolumes(id string) (pagination.Pager, error) {
+	return r.readResources(&storageReader.Volume{ProjectID: id})
 }
 
 // ListFloatingIPs lists all floating ips.

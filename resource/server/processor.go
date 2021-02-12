@@ -48,13 +48,13 @@ func (p *Processor) Reader() *reader.Reader {
 }
 
 // Process provides listing of the servers with pagination.
-func (p *Processor) Process(_ projects.Project, osClient *gophercloud.ProviderClient, read chan resource.Resource,
+func (p *Processor) Process(project projects.Project, osClient *gophercloud.ProviderClient, read chan resource.Resource,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	p.createReader(osClient)
 
-	servs, err := p.reader.ListAllServers()
+	servs, err := p.reader.ListAllServers(project.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list servers")
 		return
