@@ -33,6 +33,11 @@ func CreateSharedFileSystemV2ServiceClient(client *gophercloud.ProviderClient) (
 	return openstack.NewSharedFileSystemV2(client, endpointOptions())
 }
 
+// CreateNewBlockStorageV3ServiceClient creates a ServiceClient that may be used with the v3 blockStorage package.
+func CreateNewBlockStorageV3ServiceClient(client *gophercloud.ProviderClient) (*gophercloud.ServiceClient, error) {
+	return openstack.NewBlockStorageV3(client, endpointOptions())
+}
+
 func endpointOptions() gophercloud.EndpointOpts {
 	return gophercloud.EndpointOpts{
 		Type:         viper.GetString(constants.CfgEndpointType),

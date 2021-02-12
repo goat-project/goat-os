@@ -71,3 +71,14 @@ func IsPublicIPv4(ip net.IP) bool {
 
 	return false
 }
+
+// Contains check if a slice contains an element.
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}

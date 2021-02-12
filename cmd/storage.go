@@ -19,12 +19,13 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var storageFlags = []string{constants.CfgSite}
+var storageFlags = []string{constants.CfgSite, constants.CfgAccounted}
 
 var storageRequired []string
 
 var storageDescription = map[string]string{
-	constants.CfgSite: "site [SITE]",
+	constants.CfgSite:      "site [SITE]",
+	constants.CfgAccounted: "accounted [storages]",
 }
 
 var storageShorthand = map[string]string{}
@@ -46,6 +47,12 @@ var storageCmd = &cobra.Command{
 		err := checkRequired(storageRequired)
 		if err != nil {
 			log.WithFields(log.Fields{"flag": err}).Fatal("required flag not set")
+		}
+
+		accounted := viper.GetStringSlice(constants.CfgAccounted)
+		if len(accounted) < 1 {
+			log.WithField("error", "no accounted for storage are set in configuration").Error("error account storage")
+			return
 		}
 
 		writeLimiter := rate.NewLimiter(rate.Every(time.Second/time.Duration(requestsPerSecond)), requestsPerSecond)

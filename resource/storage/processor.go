@@ -7,8 +7,11 @@ import (
 	"github.com/goat-project/goat-os/constants"
 	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource"
+	"github.com/goat-project/goat-os/util"
+	"github.com/spf13/viper"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
@@ -16,9 +19,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	image            = "image"
+	sharedFileSystem = "sharedFileSystem"
+	manila           = "manila"
+	volume           = "volume"
+	all              = "all"
+)
+
 // Processor to process storage data.
 type Processor struct {
-	reader reader.Reader
+	computeReader      reader.Reader
+	shareReader        reader.Reader
+	blockStorageReader reader.Reader
 }
 
 // CreateProcessor creates Processor to manage reading from Openstack.
@@ -29,48 +42,85 @@ func CreateProcessor(r *reader.Reader) *Processor {
 	}
 
 	return &Processor{
-		reader: *r,
+		computeReader:      *r,
+		shareReader:        *r,
+		blockStorageReader: *r,
 	}
 }
 
-func (p *Processor) createComputeReader(osClient *gophercloud.ProviderClient) {
-	cClient, err := auth.CreateComputeV2ServiceClient(osClient)
-	if err != nil {
-		log.WithFields(log.Fields{"err": err}).Error("unable to create Compute V2 service client")
-		return
+func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name string) {
+	var client *gophercloud.ServiceClient
+	var err error
+
+	switch name {
+	case image:
+		client, err = auth.CreateComputeV2ServiceClient(osClient)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			return
+		}
+		p.computeReader = *reader.CreateReader(client)
+	case sharedFileSystem, manila:
+		client, err = auth.CreateSharedFileSystemV2ServiceClient(osClient)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			return
+		}
+		p.shareReader = *reader.CreateReader(client)
+	case volume:
+		client, err = auth.CreateNewBlockStorageV3ServiceClient(osClient)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			return
+		}
+		p.blockStorageReader = *reader.CreateReader(client)
 	}
-
-	p.reader = *reader.CreateReader(cClient)
-}
-
-func (p *Processor) createSharesReader(osClient *gophercloud.ProviderClient) {
-	cClient, err := auth.CreateSharedFileSystemV2ServiceClient(osClient)
-	if err != nil {
-		log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
-		return
-	}
-
-	p.reader = *reader.CreateReader(cClient)
 }
 
 // Reader gets reader.
 func (p *Processor) Reader() *reader.Reader {
-	return &p.reader
+	return &p.computeReader
 }
 
 // Process provides listing of the images with pagination.
-func (p *Processor) Process(_ projects.Project, osClient *gophercloud.ProviderClient, read chan resource.Resource,
+func (p *Processor) Process(project projects.Project, osClient *gophercloud.ProviderClient, read chan resource.Resource,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	p.processImages(osClient, read)
-	p.processShares(osClient, read)
+	id := project.ID
+
+	accounted := viper.GetStringSlice(constants.CfgAccounted)
+
+	if util.Contains(accounted, all) {
+		wg.Add(3)
+		go p.processImages(osClient, read, id, wg)
+		go p.processShares(osClient, read, id, wg)
+		go p.processVolumes(osClient, read, id, wg)
+	} else {
+		if util.Contains(accounted, image) {
+			wg.Add(1)
+			go p.processImages(osClient, read, id, wg)
+		}
+
+		if util.Contains(accounted, sharedFileSystem) || util.Contains(accounted, manila) {
+			wg.Add(1)
+			go p.processShares(osClient, read, id, wg)
+		}
+
+		if util.Contains(accounted, volume) {
+			wg.Add(1)
+			go p.processVolumes(osClient, read, id, wg)
+		}
+	}
 }
 
-func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read chan resource.Resource) {
-	p.createComputeReader(osClient)
+func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
+	wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	imgs, err := p.reader.ListAllImages()
+	p.createReader(osClient, image)
+
+	imgs, err := p.computeReader.ListAllImages(id)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list images")
 		return
@@ -93,10 +143,13 @@ func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read cha
 	}
 }
 
-func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read chan resource.Resource) {
-	p.createSharesReader(osClient)
+func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
+	wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	shrs, err := p.reader.ListAllShares()
+	p.createReader(osClient, sharedFileSystem)
+
+	shrs, err := p.shareReader.ListAllShares(id)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list shares")
 		return
@@ -116,6 +169,35 @@ func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read cha
 
 	for i := range s {
 		read <- &s[i]
+	}
+}
+
+func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
+	wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	p.createReader(osClient, volume)
+
+	r, err := p.blockStorageReader.ListAllVolumes(id)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list volumes")
+		return
+	}
+
+	pages, err := r.AllPages() // todo add openstack pagination and wg
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error get volume pages")
+		return
+	}
+
+	rs, err := volumes.ExtractVolumes(pages)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract volumes")
+		return
+	}
+
+	for i := range rs {
+		read <- &rs[i]
 	}
 }
 

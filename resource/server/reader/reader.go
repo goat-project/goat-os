@@ -9,9 +9,10 @@ import (
 
 // Servers structure for a Reader which reads an array of servers.
 type Servers struct {
+	ProjectID string
 }
 
 // ReadResources reads servers.
-func (r *Servers) ReadResources(client *gophercloud.ServiceClient) pagination.Pager {
-	return servers.List(client, nil)
+func (s *Servers) ReadResources(client *gophercloud.ServiceClient) pagination.Pager {
+	return servers.List(client, servers.ListOpts{TenantID: s.ProjectID})
 }
