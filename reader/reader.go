@@ -13,6 +13,7 @@ import (
 	"github.com/rafaeljesus/retry-go"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/users"
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
@@ -23,6 +24,10 @@ type Reader struct {
 
 type resourcesReaderI interface {
 	ReadResources(*gophercloud.ServiceClient) pagination.Pager
+}
+
+type resourceReaderI interface {
+	ReadResource(*gophercloud.ServiceClient) users.GetResult
 }
 
 const attempts = 3
@@ -52,6 +57,19 @@ func (r *Reader) readResources(rri resourcesReaderI) (pagination.Pager, error) {
 	return pager, err
 }
 
+func (r *Reader) readResource(rri resourceReaderI) (users.GetResult, error) {
+	var result users.GetResult
+	var err error
+
+	err = retry.Do(func() error {
+		result = rri.ReadResource(r.client)
+
+		return err
+	}, attempts, sleepTime)
+
+	return result, err
+}
+
 // ListAllServers lists all servers from Openstack.
 func (r *Reader) ListAllServers(id string) (pagination.Pager, error) {
 	return r.readResources(&serverReader.Servers{ProjectID: id})
@@ -59,7 +77,12 @@ func (r *Reader) ListAllServers(id string) (pagination.Pager, error) {
 
 // ListAllUsers lists all users from Openstack.
 func (r *Reader) ListAllUsers() (pagination.Pager, error) {
-	return r.readResources(&resource.UserReader{})
+	return r.readResources(&resource.UsersReader{})
+}
+
+// GetUser get user from Openstack.
+func (r *Reader) GetUser(id string) (users.GetResult, error) {
+	return r.readResource(&resource.UserReader{ID: id})
 }
 
 // ListAllFlavors lists all flavors from Openstack.
