@@ -7,4 +7,6 @@ const cfgStoragePrefix = "storage."
 const (
 	// CfgSite represents string of storage site
 	CfgSite = cfgStoragePrefix + "site"
+	// CfgAccounted represents array of storages to be accounted
+	CfgAccounted = cfgStoragePrefix + "accounted"
 )

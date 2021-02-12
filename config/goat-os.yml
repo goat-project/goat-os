@@ -165,3 +165,5 @@ network:
 storage:
   # Site (optional)
   site:
+  # Accounted storages ["image", "sharedFileSystem (manila)", volume, all]
+  accounted: volume
