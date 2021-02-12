@@ -8,7 +8,6 @@ import (
 
 // FloatingIP structure for a Reader which read floating IPs by tenant id.
 type FloatingIP struct {
-	TenantID string
 }
 
 // ReadResources reads a server info.
