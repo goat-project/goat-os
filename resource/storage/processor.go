@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
@@ -94,6 +95,7 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		wg.Add(3)
 		go p.processImages(osClient, read, id, wg)
 		go p.processShares(osClient, read, id, wg)
+		go p.processVolumes(osClient, read, id, wg)
 	} else {
 		if util.Contains(accounted, image) {
 			wg.Add(1)
@@ -103,6 +105,11 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		if util.Contains(accounted, sharedFileSystem) || util.Contains(accounted, manila) {
 			wg.Add(1)
 			go p.processShares(osClient, read, id, wg)
+		}
+
+		if util.Contains(accounted, volume) {
+			wg.Add(1)
+			go p.processVolumes(osClient, read, id, wg)
 		}
 	}
 }
@@ -162,6 +169,35 @@ func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read cha
 
 	for i := range s {
 		read <- &s[i]
+	}
+}
+
+func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
+	wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	p.createReader(osClient, volume)
+
+	r, err := p.blockStorageReader.ListAllVolumes(id)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list volumes")
+		return
+	}
+
+	pages, err := r.AllPages() // todo add openstack pagination and wg
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error get volume pages")
+		return
+	}
+
+	rs, err := volumes.ExtractVolumes(pages)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract volumes")
+		return
+	}
+
+	for i := range rs {
+		read <- &rs[i]
 	}
 }
 

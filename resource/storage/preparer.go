@@ -4,15 +4,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goat-project/goat-os/initialize"
-
 	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/initialize"
 	"github.com/goat-project/goat-os/reader"
 	"github.com/goat-project/goat-os/resource"
 	"github.com/goat-project/goat-os/util"
 	"github.com/goat-project/goat-os/writer"
 	pb "github.com/goat-project/goat-proto-go"
 
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
 
@@ -81,6 +81,8 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		storageRecord = prepareImage(t)
 	case *shares.Share:
 		storageRecord = prepareShare(t)
+	case *volumes.Volume:
+		storageRecord = prepareVolume(t)
 	default:
 		log.WithFields(log.Fields{"type": t}).Error("error unknown type")
 	}
@@ -154,6 +156,35 @@ func prepareShare(storage *shares.Share) *pb.StorageRecord {
 		LocalGroup:   util.WrapStr(storage.ProjectID),
 		UserIdentity: util.WrapStr(storage.ProjectID), // todo - owner's name
 		Group:        util.WrapStr("/" + storage.ProjectID + "/Role=NULL/Capability=NULL"),
+		// GroupAttribute: nil,
+		// GroupAttributeType: nil,
+		StartTime:                 startTime,
+		EndTime:                   &timestamp.Timestamp{Seconds: now},
+		ResourceCapacityUsed:      size,
+		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
+		ResourceCapacityAllocated: &wrappers.UInt64Value{Value: size}, // todo - count
+	}
+}
+
+func prepareVolume(storage *volumes.Volume) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.CreatedAt)
+	now := time.Now().Unix()
+	size := uint64(storage.Size)
+
+	return &pb.StorageRecord{
+		RecordID:      guid.New().String(),
+		CreateTime:    &timestamp.Timestamp{Seconds: now},
+		StorageSystem: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
+		Site:          util.WrapStr(viper.GetString(constants.CfgSite)),
+		StorageShare:  util.WrapStr("volume"),
+		StorageMedia:  &wrappers.StringValue{Value: "disk"},
+		// StorageClass: nil,
+		FileCount: util.WrapStr("1"),
+		// DirectoryPath: nil,
+		LocalUser:    util.WrapStr(storage.UserID),                                                  // todo owner user id
+		LocalGroup:   util.WrapStr(storage.ConsistencyGroupID),                                      // ok?
+		UserIdentity: util.WrapStr(storage.UserID),                                                  // todo - owner's name
+		Group:        util.WrapStr("/" + storage.ConsistencyGroupID + "/Role=NULL/Capability=NULL"), // ok?
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 startTime,
