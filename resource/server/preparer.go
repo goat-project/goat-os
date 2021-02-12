@@ -168,6 +168,8 @@ func (p *Preparer) SendIdentifier() error {
 // Then, it closes the gRPC connection.
 func (p *Preparer) Finish() {
 	p.Writer.Finish()
+
+	log.WithFields(log.Fields{"type": "server"}).Debug("finished")
 }
 
 func getSiteName() string {

@@ -106,6 +106,8 @@ func (p *Preparer) SendIdentifier() error {
 // Then, it closes the gRPC connection.
 func (p *Preparer) Finish() {
 	p.Writer.Finish()
+
+	log.WithFields(log.Fields{"type": "storage"}).Debug("finished")
 }
 
 func prepareImage(storage *images.Image) *pb.StorageRecord {
