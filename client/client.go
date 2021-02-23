@@ -29,7 +29,6 @@ func (c *Client) Run(processor processor.Interface, filter filter.Interface, pre
 	projs := make(chan projects.Project)
 	read := make(chan resource.Resource)
 	filtered := make(chan resource.Resource)
-	fullInfo := make(chan resource.Resource)
 
 	// create done channel
 	done := make(chan bool)
@@ -39,8 +38,7 @@ func (c *Client) Run(processor processor.Interface, filter filter.Interface, pre
 
 	go processor.ListResources(projs, read, opts)
 	go filter.Filter(read, filtered)
-	go processor.RetrieveInfoResource(filtered, fullInfo)
-	go preparer.Prepare(fullInfo, done, &mapWg)
+	go preparer.Prepare(filtered, done, &mapWg)
 
 	<-done
 }

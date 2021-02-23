@@ -80,10 +80,3 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		FloatingIPs: floatings,
 	}
 }
-
-// RetrieveInfo about virtual machines specific for a given user.
-func (p *Processor) RetrieveInfo(fullInfo chan resource.Resource, wg *sync.WaitGroup, res resource.Resource) {
-	defer wg.Done()
-
-	fullInfo <- res
-}

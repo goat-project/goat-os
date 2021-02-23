@@ -76,15 +76,3 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		read <- &s[i]
 	}
 }
-
-// RetrieveInfo calls method to retrieve server info.
-func (p *Processor) RetrieveInfo(fullInfo chan resource.Resource, wg *sync.WaitGroup, vm resource.Resource) {
-	defer wg.Done()
-
-	if vm == nil {
-		log.WithFields(log.Fields{}).Debug("retrieve info no vm")
-		return
-	}
-
-	fullInfo <- vm
-}
