@@ -10,5 +10,4 @@ import (
 type Interface interface {
 	ListProjects(chan projects.Project)
 	ListResources(chan projects.Project, chan resource.Resource, gophercloud.AuthOptions)
-	RetrieveInfoResource(chan resource.Resource, chan resource.Resource)
 }

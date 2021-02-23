@@ -200,15 +200,3 @@ func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read ch
 		read <- &rs[i]
 	}
 }
-
-// RetrieveInfo - only for ? relevant.
-func (p *Processor) RetrieveInfo(fullInfo chan resource.Resource, wg *sync.WaitGroup, image resource.Resource) {
-	defer wg.Done()
-
-	if image == nil {
-		log.WithFields(log.Fields{}).Debug("retrieve info no image")
-		return
-	}
-
-	fullInfo <- image
-}
