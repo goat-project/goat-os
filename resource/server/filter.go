@@ -88,10 +88,20 @@ func (f *Filter) Filtering(res resource.Resource, filtered chan resource.Resourc
 	server := res.(*servers.Server)
 
 	stime := server.Created
-	etime := &time.Time{} // TODO server misses end time
+	etime := f.recordsTo // TODO server misses end time !!!
 
-	if (stime.Before(f.recordsTo) || stime.Equal(f.recordsTo)) &&
-		(etime.After(f.recordsFrom) || etime.Equal(f.recordsFrom)) {
+	// TODO server status contains only ACTIVE or IN_PROGESS,
+	//  function list does not return inactive (error, deleted,
+	//  etc.) servers. There should be used special call for
+	//  deleted servers.
+	//if server.Status != "ACTIVE" {
+	//	etime = server.Updated
+	//}
+
+	if (stime.After(f.recordsFrom) || stime.Equal(f.recordsFrom)) &&
+		(stime.Before(f.recordsTo) || stime.Equal(f.recordsTo)) &&
+		(etime.After(f.recordsFrom) || etime.Equal(f.recordsFrom)) &&
+		(etime.Before(f.recordsTo) || etime.Equal(f.recordsTo)) {
 		filtered <- server
 	}
 }
