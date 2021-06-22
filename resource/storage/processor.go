@@ -14,6 +14,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
 
 	log "github.com/sirupsen/logrus"
@@ -106,6 +107,7 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		go p.processImages(osClient, read, id, wg)
 		go p.processShares(osClient, read, id, wg)
 		go p.processVolumes(osClient, read, id, wg)
+		go p.processSwiftContainers(osClient, read, project, wg)
 	} else {
 		if util.Contains(accounted, image) {
 			wg.Add(1)
@@ -120,6 +122,10 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		if util.Contains(accounted, volume) {
 			wg.Add(1)
 			go p.processVolumes(osClient, read, id, wg)
+		}
+		if util.Contains(accounted, swiftContainer) {
+			wg.Add(1)
+			go p.processSwiftContainers(osClient, read, project, wg)
 		}
 	}
 }
@@ -208,5 +214,37 @@ func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read ch
 
 	for i := range rs {
 		read <- &rs[i]
+	}
+}
+
+func (p *Processor) processSwiftContainers(osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	project projects.Project, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	p.createReader(osClient, swiftContainer)
+
+	r, err := p.objectStorageReader.ListAllSwiftContainers()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list containers")
+		return
+	}
+
+	pages, err := r.AllPages() // todo add openstack pagination and wg
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error get container pages")
+		return
+	}
+
+	s, err := containers.ExtractInfo(pages)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract containers")
+		return
+	}
+
+	for i := range s {
+		read <- &SwiftContainer{
+			Project:   &project,
+			Container: &s[i],
+		}
 	}
 }
