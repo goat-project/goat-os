@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -83,6 +84,8 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		storageRecord = prepareShare(t)
 	case *volumes.Volume:
 		storageRecord = prepareVolume(t)
+	case *SwiftContainer:
+		storageRecord = prepareSwiftContainer(t)
 	default:
 		log.WithFields(log.Fields{"type": t}).Error("error unknown type")
 	}
@@ -190,6 +193,35 @@ func prepareVolume(storage *volumes.Volume) *pb.StorageRecord {
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 startTime,
+		EndTime:                   &timestamp.Timestamp{Seconds: now},
+		ResourceCapacityUsed:      size,
+		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
+		ResourceCapacityAllocated: &wrappers.UInt64Value{Value: size}, // todo - count
+	}
+}
+
+func prepareSwiftContainer(storage *SwiftContainer) *pb.StorageRecord {
+	// startTime := util.WrapTime(nil) // todo
+	now := time.Now().Unix()
+	size := uint64(storage.Container.Bytes)
+
+	return &pb.StorageRecord{
+		RecordID:      guid.New().String(),
+		CreateTime:    &timestamp.Timestamp{Seconds: now},
+		StorageSystem: viper.GetString(constants.CfgOpenstackIdentityEndpoint),
+		Site:          util.WrapStr(viper.GetString(constants.CfgSite)),
+		StorageShare:  util.WrapStr("swift"),
+		StorageMedia:  &wrappers.StringValue{Value: "disk"},
+		// StorageClass: nil,
+		FileCount: &wrappers.StringValue{Value: strconv.FormatInt(storage.Container.Count, 10)},
+		// DirectoryPath: nil,
+		LocalUser:    util.WrapStr(storage.Project.ID),
+		LocalGroup:   util.WrapStr(storage.Project.DomainID),
+		UserIdentity: util.WrapStr(storage.Project.Name),
+		Group:        util.WrapStr("/" + storage.Project.DomainID + "/Role=NULL/Capability=NULL"),
+		// GroupAttribute: nil,
+		// GroupAttributeType: nil,
+		StartTime:                 &timestamp.Timestamp{Seconds: now}, // todo //startTime,
 		EndTime:                   &timestamp.Timestamp{Seconds: now},
 		ResourceCapacityUsed:      size,
 		LogicalCapacityUsed:       &wrappers.UInt64Value{Value: size}, // todo - count
