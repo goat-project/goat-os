@@ -105,6 +105,11 @@ func (r *Reader) ListAllVolumes(id string) (pagination.Pager, error) {
 	return r.readResources(&storageReader.Volume{ProjectID: id})
 }
 
+// ListAllSwiftContainers lists all volumes.
+func (r *Reader) ListAllSwiftContainers() (pagination.Pager, error) {
+	return r.readResources(&storageReader.Swift{})
+}
+
 // ListFloatingIPs lists all floating ips.
 func (r *Reader) ListFloatingIPs() (pagination.Pager, error) {
 	return r.readResources(&networkReader.FloatingIP{})
