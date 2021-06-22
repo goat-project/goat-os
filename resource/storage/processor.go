@@ -30,9 +30,10 @@ const (
 
 // Processor to process storage data.
 type Processor struct {
-	computeReader      reader.Reader
-	shareReader        reader.Reader
-	blockStorageReader reader.Reader
+	computeReader       reader.Reader
+	shareReader         reader.Reader
+	blockStorageReader  reader.Reader
+	objectStorageReader reader.Reader
 }
 
 // CreateProcessor creates Processor to manage reading from Openstack.
@@ -43,9 +44,10 @@ func CreateProcessor(r *reader.Reader) *Processor {
 	}
 
 	return &Processor{
-		computeReader:      *r,
-		shareReader:        *r,
-		blockStorageReader: *r,
+		computeReader:       *r,
+		shareReader:         *r,
+		blockStorageReader:  *r,
+		objectStorageReader: *r,
 	}
 }
 
@@ -75,6 +77,13 @@ func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name stri
 			return
 		}
 		p.blockStorageReader = *reader.CreateReader(client)
+	case swiftContainer:
+		client, err = auth.CreateNewObjectStorageV1ServiceClient(osClient)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Object Storage V1 service client")
+			return
+		}
+		p.objectStorageReader = *reader.CreateReader(client)
 	}
 }
 
