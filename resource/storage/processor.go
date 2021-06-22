@@ -24,6 +24,7 @@ const (
 	sharedFileSystem = "sharedFileSystem"
 	manila           = "manila"
 	volume           = "volume"
+	swiftContainer   = "swift"
 	all              = "all"
 )
 
