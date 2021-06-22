@@ -59,7 +59,7 @@ func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name stri
 	case image:
 		client, err = auth.CreateComputeV2ServiceClient(osClient)
 		if err != nil {
-			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Compute V2 service client")
 			return
 		}
 		p.computeReader = *reader.CreateReader(client)
@@ -73,7 +73,7 @@ func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name stri
 	case volume:
 		client, err = auth.CreateNewBlockStorageV3ServiceClient(osClient)
 		if err != nil {
-			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			log.WithFields(log.Fields{"err": err}).Error("unable to create New Block Storage V3 service client")
 			return
 		}
 		p.blockStorageReader = *reader.CreateReader(client)
