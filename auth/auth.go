@@ -38,6 +38,11 @@ func CreateNewBlockStorageV3ServiceClient(client *gophercloud.ProviderClient) (*
 	return openstack.NewBlockStorageV3(client, endpointOptions())
 }
 
+// CreateNewObjectStorageV1ServiceClient creates a ServiceClient that may be used with the v1 objectStorage package.
+func CreateNewObjectStorageV1ServiceClient(client *gophercloud.ProviderClient) (*gophercloud.ServiceClient, error) {
+	return openstack.NewObjectStorageV1(client, endpointOptions())
+}
+
 func endpointOptions() gophercloud.EndpointOpts {
 	return gophercloud.EndpointOpts{
 		Type:         viper.GetString(constants.CfgEndpointType),

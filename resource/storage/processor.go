@@ -14,6 +14,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers"
 	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
 
 	log "github.com/sirupsen/logrus"
@@ -24,14 +25,16 @@ const (
 	sharedFileSystem = "sharedFileSystem"
 	manila           = "manila"
 	volume           = "volume"
+	swiftContainer   = "swift"
 	all              = "all"
 )
 
 // Processor to process storage data.
 type Processor struct {
-	computeReader      reader.Reader
-	shareReader        reader.Reader
-	blockStorageReader reader.Reader
+	computeReader       reader.Reader
+	shareReader         reader.Reader
+	blockStorageReader  reader.Reader
+	objectStorageReader reader.Reader
 }
 
 // CreateProcessor creates Processor to manage reading from Openstack.
@@ -42,9 +45,10 @@ func CreateProcessor(r *reader.Reader) *Processor {
 	}
 
 	return &Processor{
-		computeReader:      *r,
-		shareReader:        *r,
-		blockStorageReader: *r,
+		computeReader:       *r,
+		shareReader:         *r,
+		blockStorageReader:  *r,
+		objectStorageReader: *r,
 	}
 }
 
@@ -56,7 +60,7 @@ func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name stri
 	case image:
 		client, err = auth.CreateComputeV2ServiceClient(osClient)
 		if err != nil {
-			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Compute V2 service client")
 			return
 		}
 		p.computeReader = *reader.CreateReader(client)
@@ -70,10 +74,17 @@ func (p *Processor) createReader(osClient *gophercloud.ProviderClient, name stri
 	case volume:
 		client, err = auth.CreateNewBlockStorageV3ServiceClient(osClient)
 		if err != nil {
-			log.WithFields(log.Fields{"err": err}).Error("unable to create Shared File System V2 service client")
+			log.WithFields(log.Fields{"err": err}).Error("unable to create New Block Storage V3 service client")
 			return
 		}
 		p.blockStorageReader = *reader.CreateReader(client)
+	case swiftContainer:
+		client, err = auth.CreateNewObjectStorageV1ServiceClient(osClient)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("unable to create Object Storage V1 service client")
+			return
+		}
+		p.objectStorageReader = *reader.CreateReader(client)
 	}
 }
 
@@ -96,6 +107,7 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		go p.processImages(osClient, read, id, wg)
 		go p.processShares(osClient, read, id, wg)
 		go p.processVolumes(osClient, read, id, wg)
+		go p.processSwiftContainers(osClient, read, project, wg)
 	} else {
 		if util.Contains(accounted, image) {
 			wg.Add(1)
@@ -110,6 +122,10 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		if util.Contains(accounted, volume) {
 			wg.Add(1)
 			go p.processVolumes(osClient, read, id, wg)
+		}
+		if util.Contains(accounted, swiftContainer) {
+			wg.Add(1)
+			go p.processSwiftContainers(osClient, read, project, wg)
 		}
 	}
 }
@@ -198,5 +214,37 @@ func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read ch
 
 	for i := range rs {
 		read <- &rs[i]
+	}
+}
+
+func (p *Processor) processSwiftContainers(osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	project projects.Project, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	p.createReader(osClient, swiftContainer)
+
+	r, err := p.objectStorageReader.ListAllSwiftContainers()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list containers")
+		return
+	}
+
+	pages, err := r.AllPages() // todo add openstack pagination and wg
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error get container pages")
+		return
+	}
+
+	s, err := containers.ExtractInfo(pages)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract containers")
+		return
+	}
+
+	for i := range s {
+		read <- &SwiftContainer{
+			Project:   &project,
+			Container: &s[i],
+		}
 	}
 }
