@@ -165,5 +165,5 @@ network:
 storage:
   # Site (optional)
   site:
-  # Accounted storages ["image", "sharedFileSystem (manila)", volume, all]
-  accounted: volume
+  # Accounted storages ["image", "sharedFileSystem (manila)", "volume", "swift", "all"]
+  accounted: volume swift
