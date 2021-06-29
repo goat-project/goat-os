@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/goat-project/goat-os/auth"
@@ -9,6 +10,7 @@ import (
 	"github.com/goat-project/goat-os/resource"
 
 	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 
@@ -72,7 +74,64 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		return
 	}
 
-	for i := range s {
-		read <- &s[i]
+	if len(s) < 1 {
+		return
 	}
+
+	flavorsMap, err := p.listAllFlavors()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list flavors")
+	}
+
+	if flavorsMap == nil {
+		for i := range s {
+			read <- &SFStruct{Server: &s[i], Flavor: nil}
+		}
+
+		return
+	}
+
+	for i := range s {
+		var flavor *flavors.Flavor
+
+		fid := s[i].Flavor["id"]
+		if fid != nil {
+			flavor = flavorsMap[fid.(string)]
+		}
+		read <- &SFStruct{Server: &s[i], Flavor: flavor}
+	}
+}
+
+func (p *Processor) listAllFlavors() (map[string]*flavors.Flavor, error) {
+	pages, err := p.reader.ListAllFlavors()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list all flavors")
+		return nil, err
+	}
+
+	f, err := pages.AllPages()
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error list all flavor pages")
+		return nil, err
+	}
+
+	flvrs, err := flavors.ExtractFlavors(f)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("error extract all flavors")
+		return nil, err
+	}
+
+	if len(flvrs) == 0 {
+		return nil, fmt.Errorf("error empty flavor list")
+	}
+
+	flavorsMap := make(map[string]*flavors.Flavor)
+
+	for i, flavor := range flvrs {
+		if flavor.ID != "" {
+			flavorsMap[flavor.ID] = &flvrs[i]
+		}
+	}
+
+	return flavorsMap, nil
 }

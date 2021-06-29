@@ -17,12 +17,12 @@ import (
 
 var _ = ginkgo.Describe("Server Filter tests", func() {
 	var (
-		server *servers.Server
+		server *SFStruct
 		wg     sync.WaitGroup
 	)
 
 	ginkgo.JustBeforeEach(func() {
-		server = &servers.Server{Created: time.Unix(1540931164, 0)}
+		server = &SFStruct{Server: &servers.Server{Created: time.Unix(1540931164, 0)}}
 
 		viper.SetDefault(constants.CfgRecordsFrom, time.Time{})
 		viper.SetDefault(constants.CfgRecordsTo, time.Time{})
