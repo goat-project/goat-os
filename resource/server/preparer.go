@@ -12,7 +12,6 @@ import (
 	"github.com/goat-project/goat-os/util"
 	"github.com/goat-project/goat-os/writer"
 
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 
 	"golang.org/x/time/rate"
@@ -33,7 +32,6 @@ type Preparer struct {
 	computeReader  reader.Reader
 	Writer         writer.Writer
 	userIdentity   map[string]string
-	flavor         map[string]*flavors.Flavor
 }
 
 // CreatePreparer creates Preparer for virtual machine records.
@@ -77,28 +75,19 @@ func (p *Preparer) InitializeMaps(wg *sync.WaitGroup) {
 			log.WithFields(log.Fields{"error": "map is empty"}).Error("error create user identity map")
 		}
 	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		p.flavor = initialize.Flavor(p.computeReader)
-		if p.flavor == nil {
-			log.WithFields(log.Fields{"error": "map is empty"}).Error("error create flavor map")
-		}
-	}()
 }
 
 // Preparation prepares virtual machine data for writing and call method to write.
 func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	server := acc.(*servers.Server)
+	server := acc.(*SFStruct)
 	if server == nil {
 		log.WithFields(log.Fields{"error": "empty server"}).Error(constants.ErrPrepEmptyVM)
 		return
 	}
 
-	sTime := util.WrapTime(&server.Created)
+	sTime := util.WrapTime(&server.Server.Created)
 	t := time.Now()
 	eTime := util.WrapTime(&t) // todo get end time
 	wallDuration := getWallDuration(sTime, eTime)
@@ -107,34 +96,30 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	var memory *wrappers.UInt64Value
 	var diskSize *wrappers.UInt64Value
 
-	fid := server.Flavor["id"]
-	if fid != nil {
-		flavor := p.flavor[fid.(string)]
-		if flavor != nil {
-			cpuCount = uint32(flavor.VCPUs)
+	if server.Flavor != nil {
+		cpuCount = uint32(server.Flavor.VCPUs)
 
-			mem := uint64(flavor.RAM)
-			if mem != 0 {
-				memory = &wrappers.UInt64Value{Value: mem}
-			}
+		mem := uint64(server.Flavor.RAM)
+		if mem != 0 {
+			memory = &wrappers.UInt64Value{Value: mem}
+		}
 
-			disk := uint64(flavor.Disk)
-			if disk != 0 {
-				diskSize = &wrappers.UInt64Value{Value: disk}
-			}
+		disk := uint64(server.Flavor.Disk)
+		if disk != 0 {
+			diskSize = &wrappers.UInt64Value{Value: disk}
 		}
 	}
 
 	serverRecord := pb.VmRecord{
-		VmUuid:              server.ID,
+		VmUuid:              server.Server.ID,
 		SiteName:            getSiteName(),
 		CloudComputeService: getCloudComputeService(),
-		MachineName:         server.Name,
-		LocalUserId:         util.WrapStr(server.UserID),
-		LocalGroupId:        util.WrapStr(server.TenantID),
-		GlobalUserName:      getGlobalUserName(p, server),
-		Fqan:                getFqan(server.TenantID),
-		Status:              util.WrapStr(server.Status),
+		MachineName:         server.Server.Name,
+		LocalUserId:         util.WrapStr(server.Server.UserID),
+		LocalGroupId:        util.WrapStr(server.Server.TenantID),
+		GlobalUserName:      getGlobalUserName(p, server.Server),
+		Fqan:                getFqan(server.Server.TenantID),
+		Status:              util.WrapStr(server.Server.Status),
 		StartTime:           sTime,
 		EndTime:             eTime,
 		SuspendDuration:     getSuspendDuration(sTime, eTime, wallDuration),
@@ -144,18 +129,18 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		NetworkType:         nil,
 		NetworkInbound:      nil, // todo?
 		NetworkOutbound:     nil, // todo?
-		PublicIpCount:       getPublicIPCount(server),
+		PublicIpCount:       getPublicIPCount(server.Server),
 		Memory:              memory,
 		Disk:                diskSize,
 		BenchmarkType:       nil, // todo?
 		Benchmark:           nil, // todo?
 		StorageRecordId:     nil,
-		ImageId:             getImageID(server),
+		ImageId:             getImageID(server.Server),
 		CloudType:           getCloudType(),
 	}
 
 	if err := p.Writer.Write(&serverRecord); err != nil {
-		log.WithFields(log.Fields{"error": err, "id": server.ID}).Error(constants.ErrPrepWrite)
+		log.WithFields(log.Fields{"error": err, "id": server.Server.ID}).Error(constants.ErrPrepWrite)
 	}
 }
 

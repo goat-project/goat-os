@@ -4,10 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/goat-project/goat-os/resource"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-
 	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/resource"
+
 	"github.com/karrick/tparse/v2"
 
 	"github.com/spf13/viper"
@@ -85,9 +84,9 @@ func (f *Filter) Filtering(res resource.Resource, filtered chan resource.Resourc
 		return
 	}
 
-	server := res.(*servers.Server)
+	server := res.(*SFStruct)
 
-	stime := server.Created
+	stime := server.Server.Created
 	etime := f.recordsTo // TODO server misses end time !!!
 
 	// TODO server status contains only ACTIVE or IN_PROGESS,
