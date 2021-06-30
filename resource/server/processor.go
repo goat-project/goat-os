@@ -78,7 +78,8 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 		return
 	}
 
-	flavorsMap, err := p.listAllFlavors()
+	flavorsMap, err := p.listAllFlavors(osClient)
+
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list flavors")
 	}
@@ -102,7 +103,9 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 	}
 }
 
-func (p *Processor) listAllFlavors() (map[string]*flavors.Flavor, error) {
+func (p *Processor) listAllFlavors(osClient *gophercloud.ProviderClient) (map[string]*flavors.Flavor, error) {
+	p.createReader(osClient)
+
 	pages, err := p.reader.ListAllFlavors()
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list all flavors")
