@@ -98,30 +98,28 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	id := project.ID
-
 	accounted := viper.GetStringSlice(constants.CfgAccounted)
 
 	if util.Contains(accounted, all) {
 		wg.Add(3)
-		go p.processImages(osClient, read, id, wg)
-		go p.processShares(osClient, read, id, wg)
-		go p.processVolumes(osClient, read, id, wg)
+		go p.processImages(osClient, read, project, wg)
+		go p.processShares(osClient, read, project, wg)
+		go p.processVolumes(osClient, read, project, wg)
 		go p.processSwiftContainers(osClient, read, project, wg)
 	} else {
 		if util.Contains(accounted, image) {
 			wg.Add(1)
-			go p.processImages(osClient, read, id, wg)
+			go p.processImages(osClient, read, project, wg)
 		}
 
 		if util.Contains(accounted, sharedFileSystem) || util.Contains(accounted, manila) {
 			wg.Add(1)
-			go p.processShares(osClient, read, id, wg)
+			go p.processShares(osClient, read, project, wg)
 		}
 
 		if util.Contains(accounted, volume) {
 			wg.Add(1)
-			go p.processVolumes(osClient, read, id, wg)
+			go p.processVolumes(osClient, read, project, wg)
 		}
 		if util.Contains(accounted, swiftContainer) {
 			wg.Add(1)
@@ -130,13 +128,13 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 	}
 }
 
-func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
-	wg *sync.WaitGroup) {
+func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	project projects.Project, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	p.createReader(osClient, image)
 
-	imgs, err := p.computeReader.ListAllImages(id)
+	imgs, err := p.computeReader.ListAllImages(project.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list images")
 		return
@@ -155,17 +153,20 @@ func (p *Processor) processImages(osClient *gophercloud.ProviderClient, read cha
 	}
 
 	for i := range s {
-		read <- &s[i]
+		read <- &PImage{
+			Project: &project,
+			Image:   &s[i],
+		}
 	}
 }
 
-func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
-	wg *sync.WaitGroup) {
+func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	project projects.Project, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	p.createReader(osClient, sharedFileSystem)
 
-	shrs, err := p.shareReader.ListAllShares(id)
+	shrs, err := p.shareReader.ListAllShares(project.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list shares")
 		return
@@ -184,17 +185,20 @@ func (p *Processor) processShares(osClient *gophercloud.ProviderClient, read cha
 	}
 
 	for i := range s {
-		read <- &s[i]
+		read <- &PShare{
+			Project: &project,
+			Share:   &s[i],
+		}
 	}
 }
 
-func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read chan resource.Resource, id string,
-	wg *sync.WaitGroup) {
+func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read chan resource.Resource,
+	project projects.Project, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	p.createReader(osClient, volume)
 
-	r, err := p.blockStorageReader.ListAllVolumes(id)
+	r, err := p.blockStorageReader.ListAllVolumes(project.ID)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("error list volumes")
 		return
@@ -213,7 +217,10 @@ func (p *Processor) processVolumes(osClient *gophercloud.ProviderClient, read ch
 	}
 
 	for i := range rs {
-		read <- &rs[i]
+		read <- &PVolume{
+			Project: &project,
+			Volume:  &rs[i],
+		}
 	}
 }
 
