@@ -13,10 +13,6 @@ import (
 	"github.com/goat-project/goat-os/writer"
 	pb "github.com/goat-project/goat-proto-go"
 
-	"github.com/gophercloud/gophercloud/openstack/blockstorage/v3/volumes"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"github.com/gophercloud/gophercloud/openstack/sharedfilesystems/v2/shares"
-
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
 
@@ -78,11 +74,11 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	var storageRecord *pb.StorageRecord
 
 	switch t := acc.(type) {
-	case *images.Image:
+	case *PImage:
 		storageRecord = prepareImage(t)
-	case *shares.Share:
+	case *PShare:
 		storageRecord = prepareShare(t)
-	case *volumes.Volume:
+	case *PVolume:
 		storageRecord = prepareVolume(t)
 	case *SwiftContainer:
 		storageRecord = prepareSwiftContainer(t)
@@ -113,10 +109,10 @@ func (p *Preparer) Finish() {
 	log.WithFields(log.Fields{"type": "storage"}).Debug("finished")
 }
 
-func prepareImage(storage *images.Image) *pb.StorageRecord {
-	startTime := util.WrapTime(&storage.CreatedAt)
+func prepareImage(storage *PImage) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.Image.CreatedAt)
 	now := time.Now().Unix()
-	size := uint64(storage.SizeBytes)
+	size := uint64(storage.Image.SizeBytes)
 
 	return &pb.StorageRecord{
 		RecordID:      guid.New().String(),
@@ -126,12 +122,12 @@ func prepareImage(storage *images.Image) *pb.StorageRecord {
 		StorageShare:  util.WrapStr("image"),
 		StorageMedia:  &wrappers.StringValue{Value: "disk"},
 		// StorageClass: nil,
-		FileCount: util.WrapStr(storage.File),
+		FileCount: util.WrapStr(storage.Image.File),
 		// DirectoryPath: nil,
-		LocalUser:    util.WrapStr(storage.Owner), // todo owner user id
-		LocalGroup:   util.WrapStr(storage.Owner),
-		UserIdentity: util.WrapStr(storage.Owner), // todo - owner's name
-		Group:        util.WrapStr("/" + storage.Owner + "/Role=NULL/Capability=NULL"),
+		LocalUser:    util.WrapStr(storage.Image.Owner), // todo owner user id
+		LocalGroup:   util.WrapStr(storage.Project.ID),
+		UserIdentity: util.WrapStr(storage.Image.Owner), // todo - owner's name
+		Group:        util.WrapStr(storage.Project.Name),
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 startTime,
@@ -142,10 +138,10 @@ func prepareImage(storage *images.Image) *pb.StorageRecord {
 	}
 }
 
-func prepareShare(storage *shares.Share) *pb.StorageRecord {
-	startTime := util.WrapTime(&storage.CreatedAt)
+func prepareShare(storage *PShare) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.Share.CreatedAt)
 	now := time.Now().Unix()
-	size := uint64(storage.Size)
+	size := uint64(storage.Share.Size)
 
 	return &pb.StorageRecord{
 		RecordID:      guid.New().String(),
@@ -157,10 +153,10 @@ func prepareShare(storage *shares.Share) *pb.StorageRecord {
 		// StorageClass: nil,
 		FileCount: util.WrapStr("1"),
 		// DirectoryPath: nil,
-		LocalUser:    util.WrapStr(storage.ProjectID), // todo owner user id
-		LocalGroup:   util.WrapStr(storage.ProjectID),
-		UserIdentity: util.WrapStr(storage.ProjectID), // todo - owner's name
-		Group:        util.WrapStr("/" + storage.ProjectID + "/Role=NULL/Capability=NULL"),
+		LocalUser:    util.WrapStr(storage.Share.ProjectID), // todo owner user id
+		LocalGroup:   util.WrapStr(storage.Project.ID),
+		UserIdentity: util.WrapStr(storage.Share.ProjectID), // todo - owner's name
+		Group:        util.WrapStr(storage.Project.Name),
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 startTime,
@@ -171,10 +167,10 @@ func prepareShare(storage *shares.Share) *pb.StorageRecord {
 	}
 }
 
-func prepareVolume(storage *volumes.Volume) *pb.StorageRecord {
-	startTime := util.WrapTime(&storage.CreatedAt)
+func prepareVolume(storage *PVolume) *pb.StorageRecord {
+	startTime := util.WrapTime(&storage.Volume.CreatedAt)
 	now := time.Now().Unix()
-	size := uint64(storage.Size)
+	size := uint64(storage.Volume.Size)
 
 	return &pb.StorageRecord{
 		RecordID:      guid.New().String(),
@@ -186,10 +182,10 @@ func prepareVolume(storage *volumes.Volume) *pb.StorageRecord {
 		// StorageClass: nil,
 		FileCount: util.WrapStr("1"),
 		// DirectoryPath: nil,
-		LocalUser:    util.WrapStr(storage.UserID),                                                  // todo owner user id
-		LocalGroup:   util.WrapStr(storage.ConsistencyGroupID),                                      // ok?
-		UserIdentity: util.WrapStr(storage.UserID),                                                  // todo - owner's name
-		Group:        util.WrapStr("/" + storage.ConsistencyGroupID + "/Role=NULL/Capability=NULL"), // ok?
+		LocalUser:    util.WrapStr(storage.Volume.UserID), // todo owner user id
+		LocalGroup:   util.WrapStr(storage.Project.ID),
+		UserIdentity: util.WrapStr(storage.Volume.UserID), // todo - owner's name
+		Group:        util.WrapStr(storage.Project.Name),
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 startTime,
@@ -218,7 +214,7 @@ func prepareSwiftContainer(storage *SwiftContainer) *pb.StorageRecord {
 		LocalUser:    util.WrapStr(storage.Project.ID),
 		LocalGroup:   util.WrapStr(storage.Project.DomainID),
 		UserIdentity: util.WrapStr(storage.Project.Name),
-		Group:        util.WrapStr("/" + storage.Project.DomainID + "/Role=NULL/Capability=NULL"),
+		Group:        util.WrapStr(storage.Project.Name),
 		// GroupAttribute: nil,
 		// GroupAttributeType: nil,
 		StartTime:                 &timestamp.Timestamp{Seconds: now}, // todo //startTime,
