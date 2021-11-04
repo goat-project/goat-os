@@ -141,7 +141,7 @@ func prepareImage(storage *PImage) *pb.StorageRecord {
 func prepareShare(storage *PShare) *pb.StorageRecord {
 	startTime := util.WrapTime(&storage.Share.CreatedAt)
 	now := time.Now().Unix()
-	size := uint64(storage.Share.Size)
+	size := uint64(storage.Share.Size * 1024 * 1024 * 1024) // translate GB to bytes
 
 	return &pb.StorageRecord{
 		RecordID:      guid.New().String(),
@@ -170,7 +170,7 @@ func prepareShare(storage *PShare) *pb.StorageRecord {
 func prepareVolume(storage *PVolume) *pb.StorageRecord {
 	startTime := util.WrapTime(&storage.Volume.CreatedAt)
 	now := time.Now().Unix()
-	size := uint64(storage.Volume.Size)
+	size := uint64(storage.Volume.Size * 1024 * 1024 * 1024) // translate GB to bytes
 
 	return &pb.StorageRecord{
 		RecordID:      guid.New().String(),
