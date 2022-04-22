@@ -167,3 +167,7 @@ storage:
   site:
   # Accounted storages ["image", "sharedFileSystem (manila)", "volume", "swift", "all"]
   accounted: volume swift
+# Subcommands specific for a gpu.
+gpu:
+  # Site name (required)
+  site-name: goat-gpu-site-name
