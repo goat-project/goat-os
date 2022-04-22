@@ -91,8 +91,8 @@ func accountGPU(writeLimiter *rate.Limiter, wg *sync.WaitGroup) {
 		log.WithFields(log.Fields{"err": err}).Fatal("unable to create Compute V2 service client")
 	}
 
-	prep := preparer.CreatePreparer(gpu.CreatePreparer(reader.CreateReader(identityClient), reader.CreateReader(computeClient),
-		writeLimiter, goatServerConnection()))
+	prep := preparer.CreatePreparer(gpu.CreatePreparer(reader.CreateReader(identityClient),
+		reader.CreateReader(computeClient), writeLimiter, goatServerConnection()))
 	proc := processor.CreateProcessor(gpu.CreateProcessor(reader.CreateReader(identityClient)))
 	filt := filter.CreateFilter(gpu.CreateFilter())
 
