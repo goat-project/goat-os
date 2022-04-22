@@ -139,7 +139,7 @@ linters-settings:
 
 linters:
   enable:
-    - maligned
+    #- maligned - is deprecated since v1.38.0 due to: archived by the owner.  Replaced by govet 'fieldalignment'.
     - deadcode
     - errcheck
     - gosec
@@ -148,9 +148,9 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    #- golint - is deprecated since v1.41.0 due to: archived by the owner.  Replaced by revive.
     - ineffassign
-    - interfacer
+    #- interfacer - is deprecated since v1.38.0 due to: archived by the owner.
     - lll
     - misspell
     - nakedret
@@ -161,6 +161,8 @@ linters:
     - varcheck
     - vet
     - vetshadow
+    - revive
+    - govet
   enable-all: false
   fast: false
 
