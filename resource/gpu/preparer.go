@@ -80,7 +80,7 @@ func (p *Preparer) InitializeMaps(wg *sync.WaitGroup) {
 func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	gpu := acc.(*GPUStruct)
+	gpu := acc.(*Resource)
 	if gpu == nil {
 		log.WithFields(log.Fields{"error": "empty gpu"}).Error(constants.ErrPrepEmptyGPU)
 		return

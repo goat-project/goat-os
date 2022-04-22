@@ -139,7 +139,7 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 				return
 			}
 
-			read <- &GPUStruct{Project: &project, Server: &allServers[i], ExtraSpecs: extraSpecs}
+			read <- &Resource{Project: &project, Server: &allServers[i], ExtraSpecs: extraSpecs}
 		}
 	}
 }
