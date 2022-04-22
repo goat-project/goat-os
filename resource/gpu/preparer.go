@@ -137,7 +137,7 @@ func (p *Preparer) SendIdentifier() error {
 func (p *Preparer) Finish() {
 	p.Writer.Finish()
 
-	log.WithFields(log.Fields{"type": "server"}).Debug("finished")
+	log.WithFields(log.Fields{"type": "gpu"}).Debug("finished")
 }
 
 func getSiteName() string {
