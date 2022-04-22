@@ -10,6 +10,19 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
+// WrapUint32 function returns nil when an error occurred otherwise returns value in wrappers.UInt32Value format.
+func WrapUint32(value string) *wrappers.UInt32Value {
+	if value != "" {
+		var i uint64
+		i, err := strconv.ParseUint(value, 10, 32)
+		if err == nil {
+			return &wrappers.UInt32Value{Value: uint32(i)}
+		}
+	}
+
+	return nil
+}
+
 // WrapUint64 function returns nil when an error occurred otherwise returns value in wrappers.UInt64Value format.
 func WrapUint64(value string) *wrappers.UInt64Value {
 	if value != "" {
