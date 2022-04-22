@@ -86,7 +86,7 @@ var _ = ginkgo.Describe("GPU Writer tests", func() {
 			})
 
 			ginkgo.It("should write record", func() {
-				record := &goat_grpc.VmRecord{
+				record := &goat_grpc.GPURecord{
 					SiteName: "test-site-name",
 				}
 
@@ -110,7 +110,7 @@ var _ = ginkgo.Describe("GPU Writer tests", func() {
 			})
 
 			ginkgo.It("should write record because server ignores empty records", func() {
-				gomega.Expect(writer.Write(&goat_grpc.VmRecord{})).NotTo(gomega.HaveOccurred())
+				gomega.Expect(writer.Write(&goat_grpc.GPURecord{})).NotTo(gomega.HaveOccurred())
 			})
 		})
 	})
