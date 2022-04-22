@@ -7,13 +7,13 @@ import (
 	networkReader "github.com/goat-project/goat-os/resource/network/reader"
 	serverReader "github.com/goat-project/goat-os/resource/server/reader"
 	storageReader "github.com/goat-project/goat-os/resource/storage/reader"
+	"github.com/goat-project/goat-os/result"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/rafaeljesus/retry-go"
 
 	"github.com/gophercloud/gophercloud"
-	"github.com/gophercloud/gophercloud/openstack/identity/v3/users"
 	"github.com/gophercloud/gophercloud/pagination"
 )
 
@@ -27,7 +27,7 @@ type resourcesReaderI interface {
 }
 
 type resourceReaderI interface {
-	ReadResource(*gophercloud.ServiceClient) users.GetResult
+	ReadResource(*gophercloud.ServiceClient) result.Result
 }
 
 const attempts = 3
@@ -57,17 +57,17 @@ func (r *Reader) readResources(rri resourcesReaderI) (pagination.Pager, error) {
 	return pager, err
 }
 
-func (r *Reader) readResource(rri resourceReaderI) (users.GetResult, error) {
-	var result users.GetResult
+func (r *Reader) readResource(rri resourceReaderI) (result.Result, error) {
+	var rslt result.Result
 	var err error
 
 	err = retry.Do(func() error {
-		result = rri.ReadResource(r.client)
+		rslt = rri.ReadResource(r.client)
 
 		return err
 	}, attempts, sleepTime)
 
-	return result, err
+	return rslt, err
 }
 
 // ListAllServers lists all servers from Openstack.
@@ -80,8 +80,8 @@ func (r *Reader) ListAllUsers() (pagination.Pager, error) {
 	return r.readResources(&resource.UsersReader{})
 }
 
-// GetUser get user from Openstack.
-func (r *Reader) GetUser(id string) (users.GetResult, error) {
+// GetUser get user from Openstack. // todo is this method used?
+func (r *Reader) GetUser(id string) (result.Result, error) {
 	return r.readResource(&resource.UserReader{ID: id})
 }
 
@@ -118,4 +118,9 @@ func (r *Reader) ListFloatingIPs() (pagination.Pager, error) {
 // ListAvailableProjects lists all available projects.
 func (r *Reader) ListAvailableProjects() (pagination.Pager, error) {
 	return r.readResources(&resource.ProjectReader{})
+}
+
+// ListFlavorExtraSpecs lists flavor extra specs.
+func (r *Reader) ListFlavorExtraSpecs(id string) (result.Result, error) {
+	return r.readResource(&resource.FlavorExtraSpecsReader{FlavorID: id})
 }
