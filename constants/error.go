@@ -20,7 +20,7 @@ const (
 
 	ErrPrepEmptyVM = "error prepare empty Virtual machine"
 
-	ErrPrepWrite = "error send record"
+	ErrPrepWrite = "error send record" // nolint: gosec
 
 	ErrNoSiteName  = "no site name in configuration"
 	ErrNoCloudType = "no cloud type in configuration"
