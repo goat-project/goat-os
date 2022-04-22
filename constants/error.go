@@ -27,4 +27,6 @@ const (
 	ErrNoGroupName = "no group name"
 
 	ErrCreateProcReaderNil = "error create Processor when Reader is nil"
+
+	ErrPrepEmptyGPU = "error prepare empty GPU struct"
 )

@@ -107,10 +107,11 @@ var goatOsCmd = &cobra.Command{
 
 		var wg sync.WaitGroup
 
-		wg.Add(3)
+		wg.Add(4)
 		go accountVM(writeLimiter, &wg)
 		go accountNetwork(writeLimiter, &wg)
 		go accountStorage(writeLimiter, &wg)
+		go accountGPU(writeLimiter, &wg)
 		wg.Wait()
 	},
 }
@@ -131,6 +132,7 @@ func Initialize() {
 	initVM()
 	initNetwork()
 	initStorage()
+	initGPU()
 }
 
 func initGoatOs() {
