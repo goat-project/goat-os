@@ -122,8 +122,7 @@ func (p *Processor) Process(project projects.Project, osClient *gophercloud.Prov
 	for i := range allServers {
 		fid := allServers[i].Flavor["id"]
 
-		var flavor *flavors.Flavor
-		flavor = flavorsMap[fid.(string)]
+		flavor := flavorsMap[fid.(string)]
 
 		// condition takes only flavors with `nvidia` or broken flavors with old/null ID
 		if flavor == nil || strings.Contains(flavor.Name, "nvidia") {
