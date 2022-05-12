@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"google.golang.org/grpc/credentials/insecure"
+
 	"cloud.google.com/go/rpcreplay"
 	"github.com/goat-project/goat-os/resource/network"
 	goat_grpc "github.com/goat-project/goat-proto-go"
@@ -43,7 +45,8 @@ var _ = ginkgo.Describe("Network Writer tests", func() {
 				fmt.Println("unable to create new recorder", err)
 				return
 			}
-			conn, err = grpc.Dial("127.0.0.1:9623", append([]grpc.DialOption{grpc.WithInsecure()}, rec.DialOptions()...)...)
+			conn, err = grpc.Dial("127.0.0.1:9623", append([]grpc.DialOption{
+				grpc.WithTransportCredentials(insecure.NewCredentials())}, rec.DialOptions()...)...)
 		} else {
 			rep, err = rpcreplay.NewReplayer(recPath)
 			if err != nil {

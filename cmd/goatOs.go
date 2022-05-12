@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/credentials/insecure"
+
 	"golang.org/x/time/rate"
 
 	"github.com/gophercloud/gophercloud"
@@ -211,7 +213,8 @@ func checkRequired(required []string) error {
 }
 
 func goatServerConnection() *grpc.ClientConn {
-	conn, err := grpc.Dial(viper.GetString(constants.CfgGoatEndpoint), grpc.WithInsecure())
+	conn, err := grpc.Dial(viper.GetString(constants.CfgGoatEndpoint), grpc.WithTransportCredentials(
+		insecure.NewCredentials()))
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Fatal("error connect to goat server via gRPC")
 	}
