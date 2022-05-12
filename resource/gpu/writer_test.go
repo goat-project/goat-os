@@ -1,4 +1,4 @@
-package network_test
+package gpu_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"cloud.google.com/go/rpcreplay"
-	"github.com/goat-project/goat-os/resource/network"
+	"github.com/goat-project/goat-os/resource/gpu"
 	goat_grpc "github.com/goat-project/goat-proto-go"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
@@ -17,7 +17,7 @@ import (
 
 var recWriterDir = "records/writer/"
 
-var _ = ginkgo.Describe("Network Writer tests", func() {
+var _ = ginkgo.Describe("GPU Writer tests", func() {
 	var (
 		recName string
 		err     error
@@ -25,7 +25,7 @@ var _ = ginkgo.Describe("Network Writer tests", func() {
 		rep     *rpcreplay.Replayer
 		conn    *grpc.ClientConn
 
-		writer *network.Writer
+		writer *gpu.Writer
 	)
 
 	ginkgo.JustBeforeEach(func() {
@@ -62,7 +62,7 @@ var _ = ginkgo.Describe("Network Writer tests", func() {
 		}
 
 		// create correct writer
-		writer = network.CreateWriter(rate.NewLimiter(rate.Every(1), 1))
+		writer = gpu.CreateWriter(rate.NewLimiter(rate.Every(1), 1))
 		writer.SetUp(conn)
 	})
 
@@ -89,7 +89,7 @@ var _ = ginkgo.Describe("Network Writer tests", func() {
 			})
 
 			ginkgo.It("should write record", func() {
-				record := &goat_grpc.IpRecord{
+				record := &goat_grpc.GPURecord{
 					SiteName: "test-site-name",
 				}
 
@@ -113,7 +113,7 @@ var _ = ginkgo.Describe("Network Writer tests", func() {
 			})
 
 			ginkgo.It("should write record because server ignores empty records", func() {
-				gomega.Expect(writer.Write(&goat_grpc.IpRecord{})).NotTo(gomega.HaveOccurred())
+				gomega.Expect(writer.Write(&goat_grpc.GPURecord{})).NotTo(gomega.HaveOccurred())
 			})
 		})
 	})

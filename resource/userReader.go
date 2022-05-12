@@ -2,6 +2,7 @@ package resource
 
 import (
 	"github.com/goat-project/goat-os/constants"
+	"github.com/goat-project/goat-os/result"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/users"
 	"github.com/gophercloud/gophercloud/pagination"
@@ -23,6 +24,7 @@ func (ur *UsersReader) ReadResources(client *gophercloud.ServiceClient) paginati
 }
 
 // ReadResource reads a user by ID.
-func (ur *UserReader) ReadResource(client *gophercloud.ServiceClient) users.GetResult {
-	return users.Get(client, ur.ID)
+func (ur *UserReader) ReadResource(client *gophercloud.ServiceClient) result.Result {
+	r := users.Get(client, ur.ID)
+	return r
 }

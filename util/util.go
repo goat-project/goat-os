@@ -5,10 +5,24 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
+
+// WrapUint32 function returns nil when an error occurred otherwise returns value in wrappers.UInt32Value format.
+func WrapUint32(value string) *wrappers.UInt32Value {
+	if value != "" {
+		var i uint64
+		i, err := strconv.ParseUint(value, 10, 32)
+		if err == nil {
+			return &wrappers.UInt32Value{Value: uint32(i)}
+		}
+	}
+
+	return nil
+}
 
 // WrapUint64 function returns nil when an error occurred otherwise returns value in wrappers.UInt64Value format.
 func WrapUint64(value string) *wrappers.UInt64Value {
@@ -27,11 +41,7 @@ func WrapUint64(value string) *wrappers.UInt64Value {
 // otherwise returns time in timestamp.Timestamp format.
 func WrapTime(t *time.Time) *timestamp.Timestamp {
 	if t != nil {
-		var ts *timestamp.Timestamp
-		ts, err := ptypes.TimestampProto(*t)
-		if err == nil {
-			return ts
-		}
+		return timestamppb.New(*t)
 	}
 
 	return nil
