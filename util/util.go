@@ -5,7 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
@@ -40,11 +41,7 @@ func WrapUint64(value string) *wrappers.UInt64Value {
 // otherwise returns time in timestamp.Timestamp format.
 func WrapTime(t *time.Time) *timestamp.Timestamp {
 	if t != nil {
-		var ts *timestamp.Timestamp
-		ts, err := ptypes.TimestampProto(*t)
-		if err == nil {
-			return ts
-		}
+		return timestamppb.New(*t)
 	}
 
 	return nil
