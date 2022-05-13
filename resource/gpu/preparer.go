@@ -87,7 +87,18 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	}
 
 	timeNow := time.Now()
-	availableDuration := timeNow.Second() - gpu.Server.Created.Second()
+	currentYear, currentMonth, _ := timeNow.Date()
+	currentLocation := timeNow.Location()
+	// unix of the first day of this month
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation).Unix()
+	// accounting time - the first day of the month or the time when the server was created, in case it was created
+	// during this month
+	accountingTime := gpu.Server.Created.Unix()
+	if firstOfMonth > accountingTime { // if the server was created this month
+		accountingTime = firstOfMonth
+	}
+	// available duration is an active time during this month
+	availableDuration := timeNow.Unix() - accountingTime
 	if availableDuration < 0 { // should never happened
 		availableDuration = 0
 	}
@@ -105,8 +116,8 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 	cores := count * scores
 
 	gpuRecord := pb.GPURecord{
-		MeasurementMonth:     uint64(timeNow.Month()),
-		MeasurementYear:      uint64(timeNow.Year()),
+		MeasurementMonth:     uint64(currentMonth),
+		MeasurementYear:      uint64(currentYear),
 		AssociatedRecordType: "cloud",
 		AssociatedRecord:     gpu.Server.ID,
 		GlobalUserName:       getGlobalUserName(p, gpu.Server),
