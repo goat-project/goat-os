@@ -118,7 +118,7 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		LocalUserId:         util.WrapStr(server.Server.UserID),
 		LocalGroupId:        util.WrapStr(server.Server.TenantID),
 		GlobalUserName:      getGlobalUserName(p, server.Server),
-		Fqan:                getFqan(server.Server.TenantID),
+		Fqan:                getFqan(),
 		Status:              util.WrapStr(server.Server.Status),
 		StartTime:           sTime,
 		EndTime:             eTime,
@@ -178,9 +178,10 @@ func getGlobalUserName(p *Preparer, server *servers.Server) *wrappers.StringValu
 	return nil
 }
 
-func getFqan(tenantID string) *wrappers.StringValue {
-	if tenantID != "" {
-		return &wrappers.StringValue{Value: "/" + tenantID + "/Role=NULL/Capability=NULL"}
+func getFqan() *wrappers.StringValue {
+	tenantName := viper.GetString(constants.CfgTenantName)
+	if tenantName != "" {
+		return &wrappers.StringValue{Value: "/" + tenantName + "/Role=NULL/Capability=NULL"}
 	}
 
 	return nil
