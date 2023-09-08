@@ -13,6 +13,7 @@ import (
 	"github.com/goat-project/goat-os/writer"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/identity/v3/projects"
 
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
@@ -118,7 +119,7 @@ func (p *Preparer) Preparation(acc resource.Resource, wg *sync.WaitGroup) {
 		LocalUserId:         util.WrapStr(server.Server.UserID),
 		LocalGroupId:        util.WrapStr(server.Server.TenantID),
 		GlobalUserName:      getGlobalUserName(p, server.Server),
-		Fqan:                getFqan(server.Server.TenantID),
+		Fqan:                getFqan(server.Server.TenantID, p),
 		Status:              util.WrapStr(server.Server.Status),
 		StartTime:           sTime,
 		EndTime:             eTime,
@@ -178,9 +179,18 @@ func getGlobalUserName(p *Preparer, server *servers.Server) *wrappers.StringValu
 	return nil
 }
 
-func getFqan(tenantID string) *wrappers.StringValue {
-	if tenantID != "" {
-		return &wrappers.StringValue{Value: "/" + tenantID + "/Role=NULL/Capability=NULL"}
+func getFqan(tenantID string, p *Preparer) *wrappers.StringValue {
+	project, err := p.identityReader.GetProject(tenantID)
+
+	if err != nil {
+		log.WithFields(log.Fields{"error": "failed to fetch project details"}).Fatal("error fetch project details")
+	}
+
+	if project, ok := project.(projects.Project); ok {
+		// Now 'project' is of type 'projects.Project' and you can use it.
+		return &wrappers.StringValue{Value: "/" + project.Name + "/Role=NULL/Capability=NULL"}
+	} else {
+		log.WithFields(log.Fields{"error": "result could not be converted to the project type"})
 	}
 
 	return nil
