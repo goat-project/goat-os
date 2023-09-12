@@ -187,6 +187,12 @@ func getFqan(tenantID string, p *Preparer) *wrappers.StringValue {
 
 	if project, ok := project.(*projects.Project); ok {
 		// Now 'project' is of type 'projects.Project' and you can use it.
+		extraMap := project.Extra
+		if extraMap["accounting:VO"] != nil {
+			accountingValue := extraMap["accounting:VO"].(string)
+			return &wrappers.StringValue{Value: "/" + accountingValue + "/Role=NULL/Capability=NULL"}
+		}
+
 		return &wrappers.StringValue{Value: "/" + project.Name + "/Role=NULL/Capability=NULL"}
 	} else {
 		log.WithFields(log.Fields{"error": "Type conversion from Result type into Project type failed"}).Fatal("conversion failed")
