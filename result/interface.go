@@ -1,5 +1,4 @@
 package result
 
 // Result universal result
-type Result interface {
-}
+type Result interface{}

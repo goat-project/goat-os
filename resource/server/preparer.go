@@ -181,18 +181,16 @@ func getGlobalUserName(p *Preparer, server *servers.Server) *wrappers.StringValu
 
 func getFqan(tenantID string, p *Preparer) *wrappers.StringValue {
 	project, err := p.identityReader.GetProject(tenantID)
-
 	if err != nil {
 		log.WithFields(log.Fields{"error": "failed to fetch project details"}).Fatal("error fetch project details")
 	}
 
-	if project, ok := project.(projects.Project); ok {
+	if project, ok := project.(*projects.Project); ok {
 		// Now 'project' is of type 'projects.Project' and you can use it.
 		return &wrappers.StringValue{Value: "/" + project.Name + "/Role=NULL/Capability=NULL"}
 	} else {
-		log.WithFields(log.Fields{"error": "result could not be converted to the project type"})
+		log.WithFields(log.Fields{"error": "Type conversion from Result type into Project type failed"}).Fatal("conversion failed")
 	}
-
 	return nil
 }
 

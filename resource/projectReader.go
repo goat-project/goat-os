@@ -22,7 +22,7 @@ func (pr *ProjectReader) ReadResources(client *gophercloud.ServiceClient) pagina
 func (pr *ProjectReader) ReadResource(client *gophercloud.ServiceClient) result.Result {
 
 	r, err := projects.Get(client, pr.ID).Extract()
-	if err == nil {
+	if err != nil {
 		log.WithFields(log.Fields{"error": "GET request for project detials failed"}).Fatal("error project info fetching")
 	}
 	return r
