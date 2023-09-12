@@ -187,9 +187,12 @@ func getFqan(tenantID string, p *Preparer) *wrappers.StringValue {
 
 	if project, ok := project.(*projects.Project); ok {
 		// Now 'project' is of type 'projects.Project' and you can use it.
-		extraMap := project.Extra
-		if extraMap["accounting:VO"] != nil {
-			accountingValue := extraMap["accounting:VO"].(string)
+		extraAttributes := project.Extra
+
+		// Check if accounting:VO attribute exists
+		if extraAttributes["accounting:VO"] != nil {
+			// If the attribute is present, return it instead of name of project
+			accountingValue := extraAttributes["accounting:VO"].(string)
 			return &wrappers.StringValue{Value: "/" + accountingValue + "/Role=NULL/Capability=NULL"}
 		}
 
