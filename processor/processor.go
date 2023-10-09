@@ -52,9 +52,8 @@ func (p *Processor) ListProjects(projChan chan projects.Project) {
 	}
 
 	for i := range projs {
-		if commonTagExists(specifiedTags, projs[i].Tags) {
+		if commonTagExists(getTags(), projs[i].Tags) {
 			projChan <- projs[i]
-
 		}
 	}
 
