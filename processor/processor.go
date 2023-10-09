@@ -36,17 +36,6 @@ func CreateProcessor(proc processorI) *Processor {
 // ListProjects lists projects from Openstack to create individual service clients.
 func (p *Processor) ListProjects(projChan chan projects.Project) {
 
-	specifiedTags := []string{viper.GetString(constants.CfgDefaultTag)} // Default state for tags is a default tag
-
-	if len(viper.GetStringSlice(constants.CfgTags)) != 0 { // There are some tags specified
-		specifiedTags = []string{}
-		specifiedTags = append(specifiedTags, viper.GetStringSlice(constants.CfgTags)...)
-	}
-
-	if viper.GetBool(constants.CfgIgnoreTags) { // Ignoring tags
-		specifiedTags = []string{}
-	}
-
 	availableProjects, err := p.proc.Reader().ListAvailableProjects()
 	if err != nil {
 		log.WithFields(log.Fields{"err": err}).Fatal("unable to list available projects")
@@ -96,6 +85,20 @@ func (p *Processor) ListResources(projChan chan projects.Project, read chan reso
 }
 
 // Util
+func getTags() []string {
+	specifiedTags := []string{viper.GetString(constants.CfgDefaultTag)} // Default state for tags is a default tag
+
+	if len(viper.GetStringSlice(constants.CfgTags)) != 0 { // There are some tags specified
+		specifiedTags = []string{}
+		specifiedTags = append(specifiedTags, viper.GetStringSlice(constants.CfgTags)...)
+	}
+
+	if viper.GetBool(constants.CfgIgnoreTags) { // Ignoring tags
+		specifiedTags = []string{}
+	}
+	return specifiedTags
+}
+
 func isEmpty(arr []string) bool {
 	return len(arr) == 0
 }
