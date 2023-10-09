@@ -23,4 +23,13 @@ const (
 
 	// CfgLogPath represents path to log file
 	CfgLogPath = "log-path"
+
+	// CfgTags represents tags
+	CfgTags = "tags"
+
+	// CfgIgnoreTags represents flag for turning off filtering based on tags
+	CfgIgnoreTags = "ignore-tags"
+
+	// CfgDefaultTag represents default value for the tag flag
+	CfgDefaultTag = "default-tag"
 )

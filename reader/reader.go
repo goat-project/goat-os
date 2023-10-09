@@ -1,3 +1,4 @@
+// Package reader access
 package reader
 
 import (
@@ -83,6 +84,11 @@ func (r *Reader) ListAllUsers() (pagination.Pager, error) {
 // GetUser get user from Openstack. // todo is this method used?
 func (r *Reader) GetUser(id string) (result.Result, error) {
 	return r.readResource(&resource.UserReader{ID: id})
+}
+
+// GetProject gets project from Openstack.
+func (r *Reader) GetProject(id string) (result.Result, error) {
+	return r.readResource(&resource.ProjectReader{ID: id})
 }
 
 // ListAllFlavors lists all flavors from Openstack.

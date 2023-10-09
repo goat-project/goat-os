@@ -22,6 +22,13 @@ records-from:
 # time format: yyyy-mm-dd hh:mm:ss + nsec nanoseconds
 records-to:
 
+# Ignores tags when filtering projects
+ignore-tags: true
+
+# Specifies the default tag which is used to determine projects to use
+default-tag: caso
+
+
 # Records for given period (optional)
 # The following tokens may be used to specify the respective unit of time:
 # Nanosecond: ns
@@ -38,9 +45,12 @@ records-for-period:
 
 # Goat server endpoint (required)
 endpoint: 127.0.0.1:9623
+# endpoint: 78.128.250.28:9623
 
 # Openstack identity endpoint (required)
-openstack-identity-endpoint: https://openstack.example.com:5000/v3
+# openstack-identity-endpoint: https://openstack.example.com:5000/v3
+openstack-identity-endpoint:  https://identity.cloud.muni.cz/v3
+
 
 # Auth-options stores information needed to authenticate to
 # an OpenStack Cloud. (required)
@@ -48,17 +58,19 @@ auth-options:
   # Username is required if using Identity V2 API.
   # In Identity V3, either user-id or a combination of username and
   # domain-id or domain-name are needed.
-  username:
-  user-id:
-  password:
+  # Put either username or user-id, not both.
+  username: 
+  user-id: 
+  password: 
 
   # Passcode is used in TOTP authentication method.
   passcode:
 
   # At most one of domain-id and domain-name must be provided if using
   # username with Identity V3. Otherwise, either are optional.
+  # Don't provide domain-name if you used user-id.
   domain-id:
-  domain-name:
+  domain-name: 
 
   # The tenant-id and tenant-name fields are optional for the Identity V2 API.
   # The same fields are known as project-id and project-name in the Identity
@@ -72,32 +84,33 @@ auth-options:
   # accomplish that, the project-id will need to be provided as the tenant-id
   # option.
   tenant-id:
-  tenant-name:
+  tenant-name: 
 
   # Allow-reauth should be set to true if you grant permission for developers to
   # cache your credentials in memory, and to allow developers to attempt to
   # re-authenticate automatically if/when your token expires.  If you set it to
   # false, it will not cache these settings, but re-authentication will not be
   # possible. This setting defaults to false.
-  allow-reauth:
+  allow-reauth: true
 
   # Token-id allows users to authenticate (possibly as another user) with an
   #	authentication token ID.
-  token-id:
+  token-id: gAAAAABlEsN38cByrKuajByJItEEsxcikpIWcr0O4ILeDidCqdLpPtJPpc8D8wk8N1R8FHkcomrlDAYc3PLnc3Hl7FsntvnCBB-B-KS8JU7tIkw_NxMgS6qHt4jOM62BQQCJnHHXkhbfmz7rawP5VO4OzCWVbqtmZTWJyZLlaooXW3zZKmqVWMw
 
   # Scope determines the scoping of the authentication request.
   # It allows a created token to be limited to a specific domain or project.
-  scope-project-id:
+  # Put either project-id or project-name, not both. 
+  scope-project-id: 
   scope-project-name:
   scope-domain-id:
-  scope-domain-name:
+  scope-domain-name: egi_eu
   scope-system:
 
   # Authentication through Application Credentials requires supplying name,
   # project and secret. For project we can use tenant-id.
-  application-credential-id:
-  application-credential-name:
-  application-credential-secret:
+  # application-credential-id: 14b01e088ed045358c9a6a963fc45b55
+  # application-credential-name:
+  # application-credential-secret: FHOVTMO0iuKTatwYG8_IWRa5sl7WYcifo4xV9eJ1a_w3qOn6CVn1v340kRS71P_ARApM6R8Tv-iQE7rhAfb-4A
 
 # Endpoint options specifies search criteria used by queries against an
 # OpenStack service catalog. The options must contain enough information to
@@ -106,17 +119,17 @@ endpoint-options:
   # Type is the service type for the client (e.g., "compute",
   # "object-store"). Generally, this will be supplied by the service client
   # function, but a user-given value will be honored if provided.
-  type:
+  type: 
 
   # Name is the service name for the client (e.g., "nova") as it
   # appears in the service catalog. Services can have the same Type but a
   # different Name, which is why both Type and Name are sometimes needed.
-  name:
+  name: 
 
   # Region is the geographic region in which the endpoint resides,
   #	generally specifying which data center should house your resources.
   #	Required only for services that span multiple regions.
-  region:
+  region: brno1
 
   # Availability indicates to whom a specific service endpoint is accessible:
   # the internet at large, internal networks only, or only to administrators.
@@ -129,10 +142,10 @@ endpoint-options:
   #
   #	Availability is not required, and defaults to public. Not all providers or
   # services offer all Availability options.
-  availability:
+  availability: public
 
 # Debug mode (true/false)
-debug: false
+debug: true
 
 # Path to log file (optional)
 log-path:
