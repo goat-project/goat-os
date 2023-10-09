@@ -197,9 +197,9 @@ func getFqan(tenantID string, p *Preparer) *wrappers.StringValue {
 		}
 
 		return &wrappers.StringValue{Value: "/" + project.Name + "/Role=NULL/Capability=NULL"}
-	} else {
-		log.WithFields(log.Fields{"error": "Type conversion from Result type into Project type failed"}).Fatal("conversion failed")
 	}
+	log.WithFields(log.Fields{"error": "Type conversion from Result into Project"}).Fatal("conversion failed")
+
 	return nil
 }
 

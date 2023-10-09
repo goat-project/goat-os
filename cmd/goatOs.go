@@ -33,7 +33,8 @@ var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, co
 	constants.CfgScopeProjectName, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
 	constants.CfgAppCredentialID, constants.CfgAppCredentialName, constants.CfgAppCredentialSecret,
 	constants.CfgEndpointType, constants.CfgEndpointName, constants.CfgEndpointRegion,
-	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath, constants.CfgTags, constants.CfgIgnoreTags, constants.CfgDefaultTag}
+	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath,
+	constants.CfgTags, constants.CfgIgnoreTags, constants.CfgDefaultTag}
 
 var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
 	constants.CfgOpenstackIdentityEndpoint}

@@ -23,7 +23,7 @@ func (pr *ProjectReader) ReadResource(client *gophercloud.ServiceClient) result.
 
 	r, err := projects.Get(client, pr.ID).Extract()
 	if err != nil {
-		log.WithFields(log.Fields{"error": "GET request for project detials failed"}).Fatal("error project info fetching")
+		log.WithFields(log.Fields{"error": "GET request for project details failed"}).Fatal("error project info fetching")
 	}
 	return r
 }
