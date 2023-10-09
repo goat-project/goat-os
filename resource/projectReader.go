@@ -1,3 +1,4 @@
+// Package resource access
 package resource
 
 import (
