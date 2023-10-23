@@ -145,7 +145,7 @@ endpoint-options:
   availability: public
 
 # Debug mode (true/false)
-debug: true
+debug: false
 
 # Path to log file (optional)
 log-path:
