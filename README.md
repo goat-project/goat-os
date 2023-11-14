@@ -1,18 +1,10 @@
 # Goat-os
 
-Openstack client for [goat](https://github.com/goat-project/goat) - Go Accounting Tool.
+The Goat-os client is a command-line tool designed for the [Goat Accounting Tool](https://github.com/goat-project/goat) and integrates with OpenStack. It connects to an OpenStack cloud, retrieves information about *virtual machines/servers*, *virtual networks*, *users*, and *images*. The client then applies filters based on specified time criteria, such as extracting records from a certain time, up to a certain time, or for a specified period.
 
-The Goat-os client is a command-line tool that connects to an Openstack cloud, 
-extracts data about _virtual machines/servers_, _virtual networks_, _users_ and _images_, filters them 
-accordingly and then sends them to a [goat server](https://github.com/goat-project/goat) for 
-further processing. 
+It's important to note that the filter cannot be set to extract records both **from/to** and **for a period** simultaneously. *Time from* and *time to* can be used independently, with the condition that *time from* must be earlier than *time to*.
 
-The data are filtered by time. Filter allows the records **from time**, **to time** or 
-**for a period**. It cannot filter the records from/to and records for a period in 
-the same time. Time from and time to can be used independently. Time from has to be 
-earlier than time to.
-
-See [goat wiki](https://github.com/goat-project/goat/wiki) for more info.
+For more detailed information, refer to the [Goat wiki](https://github.com/goat-project/goat/wiki).
 
 ## Requirements
 * Go 1.12 or newer
@@ -39,7 +31,7 @@ Available Commands:
   vm          Extract virtual machine data
 
 Flags:
-  -d, --debug string                 debug
+  -d, --debug boolean                 debug
   -e, --endpoint string              goat server [GOAT_SERVER_ENDPOINT] (required)
   -h, --help                         help for goat-os
   -i, --identifier string            goat identifier [IDENTIFIER] (required)
@@ -49,6 +41,9 @@ Flags:
   -p, --records-for-period string    records for period [TIME PERIOD]
   -f, --records-from string          records from [TIME]
   -t, --records-to string            records to [TIME]
+      --tags string                  records with the specified tag, e.g. "egi"
+      --ignore-tags                  tags are ignored
+      --default-tag string           change default tag (modifiable in config)
       --version                      version for goat-os
 
 Use "goat-os [command] --help" for more information about a command.
@@ -60,7 +55,7 @@ Extract virtual machine data from the last 5 years and save it with the identifi
 go run goat-os.go vm -p 5y -i goat-vm
 ```
 
-## Container
+## Docker container
 The goat should run into the container described in [Dockerfile](https://github.com/goat-project/goat-os/blob/master/Dockerfile). 
 Build and run commands:
 ```
