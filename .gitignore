@@ -19,3 +19,6 @@ goat-os
 
 # Dependency directories
 vendor/
+
+# Configuration should be ignored as it can contain passwords
+config/*
