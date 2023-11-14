@@ -18,6 +18,8 @@ go get -u github.com/goat-project/goat-os
 ```
 
 ## Configuration
+You can modify configuration of goat-os either by specifying options in the command line using flags or by editing configuration file (config/goat-os.yml). Options specified through command line have higher priority than options specified in the configuration file. It's recommended to use the configuration file.
+
 Usage of goat-os:
 ```
 Usage:
