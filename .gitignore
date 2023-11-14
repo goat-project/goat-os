@@ -21,4 +21,4 @@ goat-os
 vendor/
 
 # Configuration should be ignored as it can contain passwords
-config/*
+config/
