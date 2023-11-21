@@ -39,28 +39,16 @@ USER ${user}
 # EXPOSE 9623
 
 # Run main command with following options:
-#  -cert-file string
-#        server certificate file (default "server.pem")
-#  -debug
-#        True for debug mode, false otherwise
-#  -ip-per-file uint
-#        number of IPs per json file (default 500)
-#  -key-file string
-#        server key file (default "server.key")
-#  -listen-ip string
-#        IP address to bind to (default "127.0.0.1")
-#  -log-path string
-#        log path
-#  -out-dir string
-#        output directory
-#  -port uint
-#        port to bind to (default 9623)
-#  -storage-per-file uint
-#        number of storages per xml file (default 500)
-#  -templates-dir string
-#        templates directory
-#  -tls
-#        True uses TLS, false uses plaintext TCP
-#  -vm-per-file uint
-#        number of VMs per template file (default 500)
-CMD /bin/goat 
+#   -d, --debug string                 debug
+#   -e, --endpoint string              goat server [GOAT_SERVER_ENDPOINT] (required)
+#   -h, --help                         help for goat-os
+#   -i, --identifier string            goat identifier [IDENTIFIER] (required)
+#       --log-path string              path to log file
+#   -o, --openstack-endpoint string    Openstack endpoint [OPENSTACK_ENDPOINT] (required)
+#   -s, --openstack-secret string      Openstack secret [OPENSTACK_SECRET] (required)
+#   -p, --records-for-period string    records for period [TIME PERIOD]
+#   -f, --records-from string          records from [TIME]
+#   -t, --records-to string            records to [TIME]
+#       --version                      version for goat-os
+
+CMD /bin/goat-os
