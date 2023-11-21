@@ -1,3 +1,4 @@
+// Package main access
 package main
 
 import "github.com/goat-project/goat-os/cmd"

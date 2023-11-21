@@ -1,3 +1,4 @@
+// Package logger access
 package logger
 
 import (

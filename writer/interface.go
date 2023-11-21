@@ -1,3 +1,4 @@
+// Package writer access
 package writer
 
 // Interface to write records to Goat server.

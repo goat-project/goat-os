@@ -1,3 +1,4 @@
+// Package cmd access
 package cmd
 
 import (
@@ -33,7 +34,8 @@ var goatOsFlags = []string{constants.CfgIdentifier, constants.CfgRecordsFrom, co
 	constants.CfgScopeProjectName, constants.CfgScopeDomainID, constants.CfgScopeDomainName, constants.CfgScopeSystem,
 	constants.CfgAppCredentialID, constants.CfgAppCredentialName, constants.CfgAppCredentialSecret,
 	constants.CfgEndpointType, constants.CfgEndpointName, constants.CfgEndpointRegion,
-	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath}
+	constants.CfgEndpointAvailability, constants.CfgDebug, constants.CfgLogPath,
+	constants.CfgTags, constants.CfgIgnoreTags, constants.CfgDefaultTag}
 
 var goatOsRequired = []string{constants.CfgIdentifier, constants.CfgGoatEndpoint,
 	constants.CfgOpenstackIdentityEndpoint}
@@ -43,6 +45,9 @@ var goatOsDescription = map[string]string{
 	constants.CfgRecordsFrom:      "records from [TIME]",
 	constants.CfgRecordsTo:        "records to [TIME]",
 	constants.CfgRecordsForPeriod: "records for period [TIME PERIOD]",
+	constants.CfgTags:             "projects with specified [TAG]",
+	constants.CfgIgnoreTags:       "projects with any [TAG]",
+	constants.CfgDefaultTag:       "specifies the default [TAG]",
 
 	constants.CfgGoatEndpoint:              "goat server [GOAT_SERVER_ENDPOINT] (required)",
 	constants.CfgOpenstackIdentityEndpoint: "Openstack identity endpoint [OS_IDENTITY_ENDPOINT] (required)",
