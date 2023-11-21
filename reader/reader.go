@@ -85,6 +85,11 @@ func (r *Reader) GetUser(id string) (result.Result, error) {
 	return r.readResource(&resource.UserReader{ID: id})
 }
 
+// GetProject gets project from Openstack.
+func (r *Reader) GetProject(id string) (result.Result, error) {
+	return r.readResource(&resource.ProjectReader{ID: id})
+}
+
 // ListAllFlavors lists all flavors from Openstack.
 func (r *Reader) ListAllFlavors() (pagination.Pager, error) {
 	return r.readResources(&resource.FlavorReader{})
